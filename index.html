@@ -1,0 +1,3021 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#121412">
+<title>Круговорот для телефона</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;700;900&display=swap">
+<style>
+/* Макет: полноэкранная улица на холсте; слева сверху — касса, сверху — шкала человечества,
+   справа — конторская книга управления (на телефоне — нижняя шторка). Чистая 1-битная графика. */
+:root {
+  --paper: #e6e8e3;
+  --ink: #121412;
+  --ink-2: #565b54;
+  --rule: #b6bab1;
+  --panel: #f2f3ef;
+  --ghost: rgba(18, 20, 18, .07);
+  --f-display: "Unbounded", "Arial Black", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Golos Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --hard: 4px 4px 0 var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111210; --ink: #e3e5df; --ink-2: #9a9f96; --rule: #3a3d37; --panel: #181917; --ghost: rgba(227, 229, 223, .07);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111210; --ink: #e3e5df; --ink-2: #9a9f96; --rule: #3a3d37; --panel: #181917; --ghost: rgba(227, 229, 223, .07);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 14px;
+  overflow: hidden; -webkit-font-smoothing: antialiased; user-select: none; -webkit-user-select: none;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+#app { position: relative; height: 100%; overflow: hidden; }
+#cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#cv.grabbing { cursor: grabbing; }
+#cv.pointing { cursor: pointer; }
+
+/* ---------- касса ---------- */
+.hud {
+  position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+  display: grid; gap: 6px; pointer-events: none; max-width: calc(100% - 32px);
+  background: color-mix(in srgb, var(--paper) 86%, transparent); padding: 2px 12px 6px 0;
+}
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand b { font-family: var(--f-display); font-weight: 900; font-size: 20px; letter-spacing: .02em; }
+.brand span { font-size: 11px; color: var(--ink-2); letter-spacing: .08em; text-transform: uppercase; }
+.cash { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.cash #money { font-family: var(--f-mono); font-weight: 600; font-size: 30px; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.cash #rate { font-family: var(--f-mono); font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.meters { display: flex; gap: 14px; font-size: 12px; color: var(--ink-2); flex-wrap: wrap; }
+.meters b { color: var(--ink); font-family: var(--f-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.buffs { display: flex; gap: 6px; flex-wrap: wrap; }
+.buff {
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper); padding: 3px 7px; position: relative; overflow: hidden;
+}
+.buff i { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--paper); opacity: .7; }
+
+/* ---------- шкала человечества ---------- */
+.humanity {
+  position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  width: min(520px, calc(100% - 820px)); min-width: 280px; pointer-events: none; display: grid; gap: 5px;
+  background: color-mix(in srgb, var(--paper) 86%, transparent); padding: 2px 0 4px;
+}
+.humanity .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-2); }
+.humanity .row b { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--ink); font-weight: 500; }
+.ticks { display: grid; grid-template-columns: repeat(82, 1fr); gap: 1px; height: 10px; }
+.ticks i { background: var(--ghost); border-bottom: 1px solid var(--rule); }
+.ticks i.on { background: var(--ink); border-color: var(--ink); }
+.ticks i.part { background: linear-gradient(90deg, var(--ink) var(--p), var(--ghost) var(--p)); }
+
+/* ---------- панель ---------- */
+.panel {
+  position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  right: max(14px, env(safe-area-inset-right, 0px)); width: 372px;
+  background: var(--panel); border: 1.5px solid var(--ink); box-shadow: var(--hard);
+  display: flex; flex-direction: column; min-height: 0;
+}
+.tabs { display: grid; grid-template-columns: 0.9fr 0.9fr 0.9fr 1fr 1.25fr 0.8fr; border-bottom: 1.5px solid var(--ink); }
+.tabs button {
+  border: 0; background: transparent; padding: 11px 2px 10px; font-size: 10.5px; font-weight: 600; letter-spacing: .03em;
+  text-transform: uppercase; border-right: 1px solid var(--rule); position: relative;
+}
+.tabs button:last-child { border-right: 0; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--panel); }
+.tabs button .dot { position: absolute; top: 5px; right: 6px; width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
+.subbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--rule); font-size: 11px; color: var(--ink-2); letter-spacing: .06em; text-transform: uppercase; }
+.seg { display: inline-flex; border: 1px solid var(--ink); }
+.seg button { border: 0; background: transparent; padding: 3px 9px; font-family: var(--f-mono); font-size: 12px; }
+.seg button + button { border-left: 1px solid var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.body { overflow-y: auto; padding: 12px 14px 18px; display: grid; gap: 10px; align-content: start; min-height: 0; flex: 1; overscroll-behavior: contain; }
+.body::-webkit-scrollbar { width: 8px; } .body::-webkit-scrollbar-thumb { background: var(--rule); }
+
+.sect { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); padding-top: 6px; display: flex; align-items: center; gap: 8px; }
+.sect::after { content: ""; flex: 1; border-top: 1px dashed var(--rule); }
+.readout { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); }
+.readout div { padding: 8px 10px; display: grid; gap: 2px; border-bottom: 1px solid var(--rule); }
+.readout div:nth-child(odd) { border-right: 1px solid var(--rule); }
+.readout div:nth-last-child(-n+2) { border-bottom: 0; }
+.readout span { font-size: 10.5px; color: var(--ink-2); letter-spacing: .05em; text-transform: uppercase; }
+.readout b { font-family: var(--f-mono); font-weight: 500; font-size: 15px; font-variant-numeric: tabular-nums; }
+
+.up { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 9px 0 10px; border-bottom: 1px solid var(--rule); }
+.up:last-child { border-bottom: 0; }
+.up-title { font-weight: 600; font-size: 14px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.up-title .lvl { font-family: var(--f-mono); font-weight: 400; font-size: 11.5px; color: var(--ink-2); }
+.up-eff { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; min-width: 0; }
+.up-eff b { color: var(--ink); font-weight: 600; font-family: var(--f-mono); font-size: 12px; }
+.buy {
+  grid-row: 1 / span 2; grid-column: 2; min-width: 104px; border: 1.5px solid var(--ink); background: var(--ink); color: var(--panel);
+  padding: 7px 10px; display: grid; justify-items: end; gap: 1px; text-align: right;
+}
+.buy .c { font-family: var(--f-mono); font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.buy .n { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+.buy:not(:disabled):hover { transform: translate(-1px, -1px); box-shadow: 2px 2px 0 var(--ink); }
+.buy:not(:disabled):active { transform: translate(1px, 1px); box-shadow: none; }
+.buy:disabled { background: transparent; color: var(--ink-2); border-style: dashed; border-color: var(--ink-2); cursor: default; }
+.buy.wide { grid-column: 1 / -1; grid-row: auto; justify-items: center; min-width: 0; padding: 10px; }
+.up.locked { opacity: .55; }
+.note { font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
+.note b { color: var(--ink); }
+
+.ctl { display: grid; gap: 8px; border: 1px solid var(--rule); padding: 10px; }
+.ctl label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.ctl input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--ink); }
+.ctl input[type="range"] { width: 100%; accent-color: var(--ink); }
+.ctl .rangerow { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 11.5px; color: var(--ink-2); }
+
+.stage-now { border: 1.5px solid var(--ink); padding: 12px; display: grid; gap: 6px; }
+.stage-now small { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.stage-now h2 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 20px; line-height: 1.15; text-wrap: balance; }
+.ladder { list-style: none; margin: 0; padding: 0; display: grid; }
+.ladder li { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--rule); font-size: 13px; align-items: baseline; }
+.ladder li span:first-child { font-family: var(--f-mono); color: var(--ink-2); font-size: 11.5px; }
+.ladder li span:last-child { font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); }
+.ladder li.done { color: var(--ink-2); text-decoration: line-through; text-decoration-color: var(--rule); }
+.ladder li.cur { font-weight: 700; }
+.ladder li.cur span:first-child::before { content: "▶ "; color: var(--ink); }
+
+.bigbtn { border: 1.5px solid var(--ink); background: var(--ink); color: var(--panel); padding: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; font-size: 13px; }
+.bigbtn:disabled { background: transparent; color: var(--ink-2); border-style: dashed; cursor: default; }
+.bigbtn.ghost { background: transparent; color: var(--ink); }
+.bigbtn.armed { background: repeating-linear-gradient(-45deg, var(--ink) 0 8px, var(--ink-2) 8px 16px); }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 13px; }
+.kv span:nth-child(odd) { color: var(--ink-2); }
+.kv span:nth-child(even) { font-family: var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+textarea { width: 100%; min-height: 70px; resize: vertical; background: var(--paper); border: 1px solid var(--ink); padding: 8px; font-family: var(--f-mono); font-size: 11px; user-select: text; -webkit-user-select: text; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.btnrow > * { flex: 1; }
+.keys { font-size: 12.5px; color: var(--ink-2); line-height: 1.6; }
+kbd { font-family: var(--f-mono); font-size: 11px; border: 1px solid var(--ink-2); border-bottom-width: 2px; padding: 0 5px; color: var(--ink); }
+
+/* ---------- подсказка и тосты ---------- */
+.hint {
+  position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  max-width: min(460px, calc(100% - 430px)); font-size: 13px; line-height: 1.4; display: flex; gap: 10px; align-items: flex-start; pointer-events: none;
+}
+.hint::before { content: "→"; font-family: var(--f-mono); font-weight: 600; }
+#toasts { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); display: grid; gap: 6px; justify-items: center; pointer-events: none; width: min(520px, calc(100% - 32px)); z-index: 5; }
+.toast { background: var(--ink); color: var(--paper); padding: 8px 14px; font-size: 13px; font-weight: 500; box-shadow: 3px 3px 0 var(--rule); animation: tin .25s ease-out; text-align: center; }
+.toast.out { opacity: 0; transition: opacity .4s; }
+@keyframes tin { from { transform: translateY(-6px); opacity: 0; } }
+
+/* ---------- окна ---------- */
+.modal { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--paper) 70%, transparent); z-index: 10; padding: 16px; }
+.card { background: var(--panel); border: 1.5px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); width: min(500px, 100%); max-height: calc(100% - 20px); overflow-y: auto; padding: 22px 22px 20px; display: grid; gap: 14px; }
+.card h1 { margin: 0; font-family: var(--f-display); font-weight: 900; font-size: 30px; line-height: 1.05; letter-spacing: .01em; text-wrap: balance; }
+.card p { margin: 0; line-height: 1.5; font-size: 14px; max-width: 62ch; }
+.card .eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+
+/* ---------- баланс, списки, журнал ---------- */
+.author-badge { display: inline-block; font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--paper); padding: 3px 7px; background: repeating-linear-gradient(-45deg, var(--ink) 0 6px, var(--ink-2) 6px 12px); align-self: center; }
+.balance { border: 1px solid var(--rule); padding: 10px; display: grid; gap: 7px; }
+.balance .bar { display: grid; grid-template-columns: 112px 1fr auto; gap: 8px; align-items: center; font-size: 12px; }
+.balance .bar > span:first-child { color: var(--ink-2); }
+.balance .track { height: 8px; background: var(--ghost); position: relative; border: 1px solid var(--rule); }
+.balance .fill { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+.balance .fill.light { background: var(--ink-2); }
+.balance .bar b { font-family: var(--f-mono); font-weight: 500; font-size: 12px; min-width: 72px; text-align: right; font-variant-numeric: tabular-nums; }
+.balance .verdict { font-size: 12.5px; line-height: 1.45; border-top: 1px dashed var(--rule); padding-top: 7px; }
+.list { display: grid; gap: 4px; align-content: start; }
+.list h3 { margin: 0; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+.list ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; align-content: start; }
+.list li { font-size: 13.5px; line-height: 1.4; padding-left: 18px; position: relative; }
+.list li::before { content: attr(data-m); position: absolute; left: 0; top: 0; font-family: var(--f-mono); font-weight: 600; }
+.list li b { font-family: var(--f-mono); font-weight: 600; font-size: 12.5px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.4; border: 1px dashed var(--ink-2); padding: 10px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--ink); flex: none; margin: 1px 0 0; }
+.warn { border-left: 3px solid var(--ink); padding: 7px 10px; font-size: 13px; line-height: 1.45; background: var(--ghost); }
+.log { list-style: none; margin: 0; padding: 0; font-size: 12.5px; border: 1px solid var(--rule); }
+.log li { display: grid; grid-template-columns: 64px 1fr; gap: 8px; padding: 5px 8px; border-bottom: 1px solid var(--rule); line-height: 1.35; }
+.log li:last-child { border-bottom: 0; }
+.log li span:first-child { font-family: var(--f-mono); color: var(--ink-2); font-size: 11.5px; }
+.buy.lockbtn .c { white-space: normal; font-size: 11px; font-weight: 500; line-height: 1.25; max-width: 110px; }
+.authorbox { border: 1.5px dashed var(--ink); padding: 10px; display: grid; gap: 8px; }
+.authorbox .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.authorbox .grid2 button { padding: 8px 6px; font-size: 11.5px; }
+.card.wide { width: min(600px, 100%); }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+.cols .list:first-child { grid-column: 1 / -1; }
+@media (max-width: 560px) { .cols { grid-template-columns: 1fr; } }
+
+/* ---------- касса и привод ---------- */
+.fin { border: 1.5px solid var(--ink); display: grid; }
+.fin-row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 10px; border-bottom: 1px solid var(--rule); font-size: 13px; }
+.fin-row b { font-family: var(--f-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.fin-row.total { border-bottom: 0; background: var(--ink); color: var(--panel); font-weight: 700; }
+.fin-row.total b { font-weight: 600; }
+.fin-row.total.neg { background: repeating-linear-gradient(-45deg, var(--ink) 0 8px, var(--ink-2) 8px 16px); }
+.spark { width: 100%; height: 64px; display: block; border: 1px solid var(--rule); background: var(--paper); }
+.drive { font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
+.ctl .bar.fw { display: grid; grid-template-columns: 74px 1fr auto; gap: 8px; align-items: center; font-size: 12px; }
+.ctl .bar.fw > span { color: var(--ink-2); }
+.ctl .bar.fw .track { height: 8px; background: var(--ghost); position: relative; border: 1px solid var(--rule); }
+.ctl .bar.fw .fill { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+.ctl .bar.fw b { font-family: var(--f-mono); font-weight: 500; font-size: 12px; }
+.check.slim { padding: 8px 10px; font-size: 12.5px; border-style: dotted; }
+.contracts { display: grid; gap: 6px; }
+
+/* ---------- поломка и ремонт ---------- */
+.repair { border: 1.5px solid var(--ink); padding: 10px; display: grid; gap: 8px; }
+.repair .rstate { font-weight: 700; font-size: 13.5px; }
+.repair .track { height: 10px; background: var(--ghost); border: 1px solid var(--rule); position: relative; }
+.repair .fill { position: absolute; inset: 0 auto 0 0; background: var(--ink); transition: width .3s; }
+.repair.risk { border-style: dashed; }
+.repair.bad { background: repeating-linear-gradient(-45deg, var(--ghost) 0 10px, transparent 10px 20px); border-width: 3px; }
+.repair.bad .rstate { font-family: var(--f-display); letter-spacing: .06em; }
+.alert {
+  position: absolute; left: 50%; transform: translateX(-50%); top: 62px; z-index: 6;
+  width: min(560px, calc(100% - 32px)); background: var(--ink); color: var(--paper);
+  display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; padding: 10px 12px; box-shadow: 4px 4px 0 var(--rule);
+}
+.alert.warn { background: var(--panel); color: var(--ink); border: 1.5px dashed var(--ink); }
+.alert span { font-size: 13px; font-weight: 600; line-height: 1.35; }
+.alert button { border: 1.5px solid var(--paper); background: var(--paper); color: var(--ink); padding: 8px 12px; font-weight: 700; font-size: 12px; letter-spacing: .03em; }
+.alert.warn button { border-color: var(--ink); background: var(--ink); color: var(--panel); }
+.alert button:disabled { opacity: .55; cursor: default; }
+.alert i { grid-column: 1 / -1; height: 4px; background: var(--paper); opacity: .85; width: 0; }
+.alert.warn i { background: var(--ink); }
+
+/* ---------- телефон (класс .m ставит скрипт: узкий экран или мобильная версия) ---------- */
+#pushbtn, #sheet-grip { display: none; }
+body.m .panel { left: 0; right: 0; bottom: 0; top: auto; height: 46%; width: auto; border-width: 1.5px 0 0; box-shadow: none; padding-bottom: env(safe-area-inset-bottom, 0px); transition: height .25s ease; }
+body.m.sheet-collapsed .panel { height: calc(118px + env(safe-area-inset-bottom, 0px)); }
+body.m.sheet-full .panel { height: 84%; }
+body.m.sheet-collapsed .panel .body { visibility: hidden; }
+body.m #sheet-grip { display: flex; justify-content: center; align-items: center; height: 26px; border: 0; border-bottom: 1px solid var(--rule); background: transparent; width: 100%; touch-action: none; gap: 8px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+body.m #sheet-grip::before { content: ""; width: 44px; height: 4px; background: var(--ink-2); border-radius: 2px; }
+body.m .tabs button { font-size: 9.5px; letter-spacing: 0; padding: 12px 0 11px; touch-action: manipulation; }
+body.m .humanity { top: auto; bottom: calc(var(--sheet-gap, 46%) + 8px); left: max(16px, env(safe-area-inset-left, 0px)); right: calc(max(16px, env(safe-area-inset-right, 0px)) + 92px); transform: none; width: auto; min-width: 0; }
+body.m .hint { display: none; }
+body.m .cash #money { font-size: 24px; }
+body.m .brand span { display: none; }
+body.m #toasts { top: 120px; }
+body.m .alert { top: auto; bottom: calc(var(--sheet-gap, 46%) + 8px); left: max(12px, env(safe-area-inset-left, 0px)); right: calc(max(14px, env(safe-area-inset-right, 0px)) + 90px); width: auto; transform: none; grid-template-columns: 1fr; padding: 9px 10px; gap: 7px; }
+body.m .alert span { font-size: 12px; }
+body.m .alert button { padding: 10px; font-size: 12.5px; }
+body.m .buy { min-height: 48px; min-width: 112px; }
+body.m .seg button { padding: 7px 11px; }
+body.m button, body.m input { touch-action: manipulation; }
+body.m #pushbtn {
+  display: grid; place-items: center; position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(var(--sheet-gap, 46%) + 10px); z-index: 4;
+  width: 78px; height: 78px; border-radius: 50%; border: 2px solid var(--ink); background: var(--paper); color: var(--ink);
+  font-family: var(--f-display); font-weight: 700; font-size: 10px; letter-spacing: .04em; touch-action: none; user-select: none; -webkit-user-select: none;
+  background-image: conic-gradient(var(--ink) calc(var(--fw, 0) * 1%), transparent 0); background-size: 100% 100%;
+  box-shadow: inset 0 0 0 7px var(--paper), 3px 3px 0 var(--ink);
+}
+body.m #pushbtn span { background: var(--paper); padding: 2px 4px; }
+body.m #pushbtn.on { transform: translate(2px, 2px); box-shadow: inset 0 0 0 7px var(--paper), 1px 1px 0 var(--ink); }
+body.m .card { padding: 18px 16px 16px; max-height: calc(100% - 12px); }
+body.m .card h1 { font-size: 24px; }
+body.m .modal { padding: 8px; }
+html, body { overscroll-behavior: none; }
+@media (min-width: 761px) and (max-width: 1180px) {
+  .humanity { top: auto; bottom: max(16px, env(safe-area-inset-bottom, 0px)); left: auto; right: 408px; transform: none; width: 300px; min-width: 0; }
+  .hint { max-width: calc(100% - 760px); }
+}
+@media (min-width: 761px) and (max-width: 1000px) { .hint { display: none; } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+</style>
+
+</head>
+<body>
+<div id="app">
+  <canvas id="cv" aria-label="Вращающаяся дверь и улица с людьми"></canvas>
+
+  <header class="hud">
+    <div class="brand"><b>КРУГОВОРОТ</b><span id="b-sub">Ларёк у дома</span></div>
+    <div class="cash"><span id="money">₽ 0</span><span id="rate">+₽ 0/с</span></div>
+    <div class="meters">
+      <span>Впущено <b id="m-adm">0</b></span>
+      <span>Очередь <b id="m-q">0</b></span>
+      <span>Входят <b id="m-flow">0/с</b></span>
+    </div>
+    <div class="buffs" id="buffs"></div>
+    <div><em class="author-badge" id="author-badge" hidden>Режим автора · ₽ ∞</em></div>
+  </header>
+
+  <div class="humanity" aria-label="Прогресс человечества">
+    <div class="row"><span>Человечество внутри</span><b id="h-num">0 из 8,2 млрд</b></div>
+    <div class="ticks" id="ticks"></div>
+  </div>
+
+  <aside class="panel" aria-label="Управление">
+    <button id="sheet-grip" type="button" aria-label="Развернуть или свернуть панель">панель</button>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="door" aria-selected="true">Дверь</button>
+      <button role="tab" data-tab="flow" aria-selected="false">Поток</button>
+      <button role="tab" data-tab="cash" aria-selected="false">Касса</button>
+      <button role="tab" data-tab="build" aria-selected="false">Здание</button>
+      <button role="tab" data-tab="fran" aria-selected="false">Франшиза</button>
+      <button role="tab" data-tab="more" aria-selected="false">Ещё</button>
+    </nav>
+    <div class="subbar"><span id="sub-l">Покупать по</span>
+      <div class="seg" id="buyseg"><button data-n="1" aria-pressed="true">×1</button><button data-n="10" aria-pressed="false">×10</button><button data-n="max" aria-pressed="false">MAX</button></div>
+    </div>
+    <div class="body" id="pbody"></div>
+  </aside>
+
+  <div class="hint" id="hint">Зажмите кнопку мыши и крутите курсор вокруг двери.</div>
+  <div class="alert" id="alert" hidden><span id="alert-t"></span><button id="alert-b" type="button"></button><i id="alert-p"></i></div>
+  <button id="pushbtn" type="button" aria-label="Крутить дверь (держать)"><span>КРУТИТЬ</span></button>
+  <div id="toasts" aria-live="polite"></div>
+
+  <div class="modal" id="modal" hidden>
+    <div class="card" id="mcard"></div>
+  </div>
+</div>
+
+<script>window.KRUG_FORCE_MOBILE = true;</script>
+<script>
+/* ================================================================
+   КРУГОВОРОТ — игровая логика v3 (без DOM, тестируется в Node)
+   Экономика: выручка = вошедшие × плата за вход × комбо;
+   расходы = аренда здания + электричество автопривода + ремонт.
+   ================================================================ */
+const Logic = (() => {
+  const TAU = Math.PI * 2;
+  const GOAL = 8.2e9;            // всё человечество
+  const MAX_OMEGA = 30;          // рад/с — предел конструкции
+  const HAND_MAX = 20;           // рад/с — быстрее рука курсором не крутит
+  const LEAVE_RATE = 0.035;      // доля очереди, уходящая в секунду
+  const SE_DIV = 1e5;            // делитель для энергии вращения
+
+  // ---------- опорная кривая дохода ----------
+  // IREF[s] — доход в ₽/с «у потолка» здания s (посчитан test/tune.js); x = −1 — самое начало игры.
+  // Все цены выражены через неё: «столько-то секунд дохода в таком-то здании».
+  const IREF = [64, 3.81e3, 1.27e5, 2.26e6, 7.56e7, 1.24e9, 3.15e10, 4.18e11, 5.77e12];
+  const ISTART = 3;
+  function Iref(x) {
+    if (x <= -1) return ISTART * Math.pow(IREF[0] / ISTART, x + 1);
+    if (x < 0) return Math.exp(Math.log(ISTART) + (Math.log(IREF[0]) - Math.log(ISTART)) * (x + 1));
+    if (x >= 8) return IREF[8] * Math.pow(IREF[8] / IREF[7], x - 8);
+    const i = Math.floor(x), f = x - i;
+    return Math.exp(Math.log(IREF[i]) * (1 - f) + Math.log(IREF[i + 1]) * f);
+  }
+  const STAGE_SECONDS = [30, 60, 100, 140, 180, 220, 260, 300];
+
+  // ---------- здания ----------
+  // loc — пешеходов в секунду у этого места; fee — базовая плата за вход, ₽; rent — аренда, ₽/с
+  const STAGES = [
+    { name: 'Ларёк у дома',      sign: 'ЛАРЁК',         cost: 0,      loc: 0.7,  fee: 10,    rent: 0 },
+    { name: 'Магазин у дома',    sign: 'ПРОДУКТЫ',      cost: 0,  loc: 2.0,  fee: 25,    rent: 0 },
+    { name: 'Супермаркет',       sign: 'СУПЕРМАРКЕТ',   cost: 0,  loc: 6,    fee: 60,    rent: 0 },
+    { name: 'Универмаг',         sign: 'УНИВЕРМАГ',     cost: 0,    loc: 18,   fee: 150,   rent: 0 },
+    { name: 'Торговый центр',    sign: 'ТЦ «ОРБИТА»',   cost: 0,    loc: 55,   fee: 400,   rent: 0 },
+    { name: 'Небоскрёб-штаб',    sign: 'КРУГОВОРОТ',    cost: 0,   loc: 160,  fee: 1000,  rent: 0 },
+    { name: 'Вокзал-гигант',     sign: 'ЦЕНТРАЛЬНЫЙ',   cost: 0,   loc: 480,  fee: 2500,  rent: 0 },
+    { name: 'Городской узел',    sign: 'ГОРОД',         cost: 0,   loc: 1400, fee: 6000,  rent: 0 },
+    { name: 'Планетарный вход',  sign: 'ВХОД ДЛЯ ВСЕХ', cost: 0,   loc: 4200, fee: 15000, rent: 0 },
+  ];
+
+  STAGES.forEach((S, i) => { S.cost = i ? Number((IREF[i - 1] * STAGE_SECONDS[i - 1]).toPrecision(2)) : 0; S.rent = i ? Number((IREF[i] * 0.02).toPrecision(2)) : 0; });
+
+  // ---------- лопасти ----------
+  // ws — оптимальные обороты (рад/с): быстрее люди не успевают войти; k — плотность загрузки отсека
+  const SHAPES = [
+    { name: 'Прямые',     ws: 1.6, k: 1.00, cost: 0,      stage: 0, d: 'Обычные стеклянные створки.' },
+    { name: 'Ковш',       ws: 2.6, k: 1.15, cost: 0,    stage: 0, d: 'Изогнутые створки зачерпывают людей.' },
+    { name: 'Крыльчатка', ws: 4.2, k: 1.30, cost: 0,    stage: 2, d: 'Как в насосе: втягивает толпу.' },
+    { name: 'Спираль',    ws: 6.8, k: 1.50, cost: 0,   stage: 4, d: 'Закручивает людей к центру.' },
+    { name: 'Турбина',    ws: 11,  k: 1.70, cost: 0,   stage: 6, d: 'Ревёт и всасывает целый квартал.' },
+  ];
+  SHAPES.forEach((x, i) => { x.cost = i === 0 ? 0 : i === 1 ? 600 : Number((50 * Iref(x.stage + 0.3)).toPrecision(2)); });
+  // в больших отсеках люди толпятся у входа и не заполняют дальний угол
+  const FILL = [0, 0, 0.55, 0.68, 0.78, 0.86, 0.92, 0.96, 1.0];
+  const BLADE_STAGE_ = [0, 0, 0, 0, 1, 2, 3, 4, 5];
+  const BLADE_COSTS = BLADE_STAGE_.map((st, n) => n < 3 ? 0 : n === 3 ? 100 : Number((25 * Iref(st + 0.4)).toPrecision(2)));
+  const BLADE_STAGE = [0, 0, 0, 0, 1, 2, 3, 4, 5];
+
+  // ---------- групповой вход: транспорт ----------
+  const TRANS = [
+    { id: 'bus',   name: 'Автобусы', unit: 'автобус',     stage: 1,  bonus: 0.25, every: 14 },
+    { id: 'metro', name: 'Метро',    unit: 'поезд метро', stage: 3,  bonus: 0.6,  every: 20 },
+    { id: 'train', name: 'Поезда',   unit: 'поезд',       stage: 5,  bonus: 1.2,  every: 28 },
+    { id: 'plane', name: 'Самолёты', unit: 'самолёт',     stage: 7,  bonus: 2.5,  every: 36 },
+  ];
+  const TRANS_MAX = 12;
+
+  // ---------- улучшения с геометрической ценой ----------
+  const SIZE_G = 1.25, ADS_G = 1.18, FEE_G = 1.16;
+  // x(l) — «в каком здании» обычно покупают уровень l → l+1; k — секунд дохода этого здания; min — нижняя цена
+  const lerpPts = (pts, l) => { for (let i = 1; i < pts.length; i++) if (l <= pts[i][0]) { const [a, xa] = pts[i - 1], [b, xb] = pts[i]; return xa + (xb - xa) * (l - a) / (b - a); } const n = pts.length; return pts[n - 1][1] + (l - pts[n - 1][0]) * 0.7; };
+  const UP = {
+    size:  { name: 'Расширение двери', k: 15, min: 20, x: l => (l - 5) / 5,       max: s => 6 + 5 * s.run.stage },
+    ads:   { name: 'Реклама',          k: 9, min: 15, x: l => (l - 7) / 4,       max: s => 8 + 4 * s.run.stage },
+    fee:   { name: 'Плата за вход',    k: 15, min: 40, x: l => (l - 5) / 4,       max: s => 6 + 4 * s.run.stage },
+    motor: { name: 'Автопривод',       k: 12, min: 25, x: l => lerpPts([[0, -1], [4, -0.4], [7, 0.5], [10, 2], [13, 4], [16, 6], [19, 8]], l), max: () => 20 },
+    gears: { name: 'Шестерни',         k: 15, min: 60, x: l => -0.6 + l * 0.9,    max: () => 10 },
+    crew:  { name: 'Сервисная бригада', k: 20, min: 150, x: l => -0.2 + l * 1.6, max: () => 5 },
+    fly:   { name: 'Маховик',          k: 15, min: 80, x: l => -0.6 + l * 0.6,    max: () => 15 },
+  };
+  TRANS.forEach(t => { UP[t.id] = { name: t.name, k: 12, min: 100, x: l => t.stage + l * (8.5 - t.stage) / TRANS_MAX, max: s => (s.run.stage >= t.stage ? TRANS_MAX : 0), trans: t }; });
+
+  // ---------- перки (навсегда, за энергию вращения) ----------
+  const START_MONEY = [0, 3e3, 3e5, 3e7, 4e9, 6e11];
+  const PERKS = [
+    { id: 'capital', name: 'Стартовый капитал', max: 5, cost: l => 2 + 2 * l, what: 'Деньги на счету в начале каждого забега.',
+      d: l => `${l ? fmtMoney(START_MONEY[l]) : 'нет'} → <b>${fmtMoney(START_MONEY[l + 1])}</b>` },
+    { id: 'word',    name: 'Сарафанное радио',  max: 8, cost: l => 2 + 2 * l, what: 'Довольные посетители зовут знакомых.',
+      d: l => `пешеходы +${25 * l}% → <b>+${25 * (l + 1)}%</b>` },
+    { id: 'eng',     name: 'Инженерное бюро',   max: 8, cost: l => 3 + 2 * l, what: 'Отсеки двери вмещают больше людей.',
+      d: l => `вместимость +${15 * l}% → <b>+${15 * (l + 1)}%</b>` },
+    { id: 'brand',   name: 'Громкое имя',       max: 8, cost: l => 3 + 3 * l, what: 'За вход в знаменитое место платят охотнее.',
+      d: l => `плата за вход +${25 * l}% → <b>+${25 * (l + 1)}%</b>` },
+    { id: 'bearing', name: 'Подшипники',        max: 5, cost: l => 3 + 3 * l, what: 'Меньше трение — меньше счёт за электричество, мотор сильнее.',
+      d: l => `трение −${10 * l}% → <b>−${10 * (l + 1)}%</b>, мотор +${10 * l}% → <b>+${10 * (l + 1)}%</b>` },
+    { id: 'brave',   name: 'Бывалые посетители', max: 5, cost: l => 4 + 4 * l, what: 'Люди успевают запрыгнуть на большей скорости.',
+      d: l => `оптимум оборотов +${6 * l}% → <b>+${6 * (l + 1)}%</b>` },
+    { id: 'factory', name: 'Заводская комплектация', max: 3, cost: l => 4 + 4 * l, what: 'Новый забег сразу с автоприводом, маховиком и шестернями.',
+      d: l => `автопривод ур. ${4 * l} → <b>${4 * (l + 1)}</b>, маховик ур. ${3 * l} → <b>${3 * (l + 1)}</b>, шестерни ур. ${2 * l} → <b>${2 * (l + 1)}</b>` },
+    { id: 'night',   name: 'Ночная смена',      max: 3, cost: l => 3 + 3 * l, what: 'Автопривод работает, пока игра закрыта.',
+      d: l => `доход вне игры ${25 + 25 * l}% → <b>${25 + 25 * (l + 1)}%</b>` },
+    { id: 'slots',   name: 'Отдел контрактов',  max: 2, cost: l => 10 + 15 * l, what: 'Можно брать больше контрактов на забег.',
+      d: l => `контрактов на забег ${1 + l} → <b>${2 + l}</b>` },
+    { id: 'star',    name: 'Звёздный агент',    max: 3, cost: l => 4 + 4 * l, what: 'Особые гости приходят чаще, эффекты длятся дольше.',
+      d: l => `интервал −${25 * l}% → <b>−${25 * (l + 1)}%</b>` },
+  ];
+
+  // ---------- контракты (на один забег) ----------
+  const CONTRACTS = [
+    { id: 'opening', name: 'Эффект открытия',   d: 'После каждого расширения двери поток ×2 на 20 с.' },
+    { id: 'bus',     name: 'Групповой тариф',   d: 'Кто приехал транспортом, платит за вход вдвое больше.' },
+    { id: 'speed',   name: 'Скоростной режим',  d: 'Оптимальные обороты +30%, но дверь изнашивается вдвое быстрее.' },
+    { id: 'eco',     name: 'Энергосбережение',  d: 'Электричество −60%, но автопривод слабее на 20%.' },
+    { id: 'fans',    name: 'Фан-клуб',          d: 'Особые гости приходят вдвое чаще.' },
+    { id: 'combo',   name: 'Шоу полётов',       d: 'Бонус комбо до +100% вместо +50%.' },
+    { id: 'nightm',  name: 'Ночной рынок',      d: 'Доход вне игры 100%, но плата за вход −10%.' },
+    { id: 'rent',    name: 'Льготная аренда',   d: 'Аренда −50%, но новые здания на 25% дороже.' },
+    { id: 'hand',    name: 'Ручная работа',     d: 'Маховик заряжается вдвое быстрее, но электричество вдвое дороже.' },
+  ];
+
+  const SPECIALS = [
+    { id: 'idol',    tag: 'КУМИР',   w: 3, msg: 'Кумир зашёл внутрь — фанаты бегут следом. Поток ×3 на 40 с' },
+    { id: 'guide',   tag: 'ГИД',     w: 3, msg: 'Экскурсия! Туристам не жалко: плата за вход ×3 на 40 с' },
+    { id: 'parade',  tag: 'ПАРАД',   w: 2, msg: 'Праздничное шествие сворачивает к вам. Поток ×5 на 25 с' },
+    { id: 'courier', tag: 'КУРЬЕР',  w: 2, msg: 'Курьер привёз выручку соседней точки' },
+    { id: 'robot',   tag: 'РОБОТ',   w: 2, msg: 'Робот-ремонтник починил дверь и смазал ось на 90 с' },
+  ];
+  const SPECIAL_HINT = {
+    idol: 'Кликните: поток ×3 на 40 с и толпа фанатов',
+    guide: 'Кликните: плата за вход ×3 на 40 с',
+    parade: 'Кликните: поток ×5 на 25 с',
+    courier: 'Кликните: выручка за 1,5 минуты',
+    robot: 'Кликните: дверь как новая, трение −50% на 90 с',
+  };
+
+  // ---------- форматирование ----------
+  const SUF = ['', ' тыс.', ' млн', ' млрд', ' трлн', ' квдрлн', ' квинтлн', ' секстлн', ' септлн', ' октлн', ' нонлн', ' децилн'];
+  function fmt(n, dec) {
+    if (!isFinite(n)) return '∞';
+    const neg = n < 0; n = Math.abs(n);
+    let s;
+    if (n < 1000) {
+      s = n < 10 && dec !== 0 && n % 1 ? n.toFixed(dec == null ? 1 : dec).replace('.', ',') : Math.floor(n).toString();
+    } else {
+      let i = Math.floor(Math.log10(n) / 3);
+      if (i >= SUF.length) return (neg ? '−' : '') + n.toExponential(2).replace('.', ',').replace('e+', 'e');
+      let v = n / Math.pow(1000, i);
+      if (v >= 999.95) { v /= 1000; i++; }
+      s = (v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2)).replace('.', ',') + SUF[i];
+    }
+    return (neg ? '−' : '') + s;
+  }
+  function fmtMoney(n) { return (n < 0 ? '−₽ ' : '₽ ') + fmt(Math.abs(n), 0); }
+  function plural(n, a, b, c) {
+    n = Math.abs(Math.floor(n)) % 100; const d = n % 10;
+    if (n > 10 && n < 20) return c; if (d > 1 && d < 5) return b; if (d === 1) return a; return c;
+  }
+
+  // ---------- состояние ----------
+  function pk(meta, id) { return (meta.perks && meta.perks[id]) || 0; }
+  function contractSlots(meta) { return 1 + pk(meta, 'slots'); }
+  function newRun(meta) {
+    const fac = pk(meta, 'factory');
+    return {
+      money: START_MONEY[pk(meta, 'capital')],
+      stage: 0,
+      lv: { size: 0, ads: 0, fee: 0, motor: fac * 4, gears: fac * 2, fly: fac * 3, crew: 0, bus: 0, metro: 0, train: 0, plane: 0 },
+      blades: 2, shape: 0,
+      theta: 0, omega: 0, driver: 'none',
+      Q: 0, loads: [0, 0],
+      autoOpt: true, motorPct: 1,
+      E: 0, cond: 1, broken: false, repairT: 0, repairTotal: 0, repairKind: '',
+      combo: 0, comboT: 0,
+      buffs: [], tTimers: {}, specialT: 30,
+      contracts: (meta.nextContracts || []).slice(0, contractSlots(meta)),
+      admittedRun: 0, moneyRun: 0, runTime: 0,
+      win: [], acc: { rev: 0, rent: 0, elec: 0, rep: 0, adm: 0, fl: 0, t: 0 },
+      rate: { rev: 0, rent: 0, elec: 0, rep: 0, adm: 0, fl: 0, profit: 0 },
+      hist: [],
+    };
+  }
+  function newState() {
+    const meta = { perks: {}, se: 0, seTotal: 0, prestiges: 0, nextContracts: [] };
+    const st = {
+      v: 3, meta, run: null,
+      life: { admitted: 0, money: 0, time: 0, maxOmega: 0, flung: 0, specials: 0, maxCombo: 0, spent: 0, breakdowns: 0, repairs: 0 },
+      won: false, wonAt: 0,
+      settings: { theme: 'auto', soundMode: 'all', volume: 0.7, buy: 1, author: false, speed: 1, autoRepair: true, crowd: 1200, white: 100, sheet: 'half' },
+      log: [], seNotified: false,
+      lastSave: Date.now(),
+    };
+    st.run = newRun(meta);
+    return st;
+  }
+
+  // ---------- оплата (в режиме автора всё бесплатно) ----------
+  function isFree(st) { return !!(st.settings && st.settings.author); }
+  function afford(st, c) { return isFree(st) || st.run.money >= c; }
+  function pay(st, c) {
+    if (isFree(st)) return true;
+    if (!(st.run.money >= c)) return false;
+    st.run.money -= c; st.life.spent += c; return true;
+  }
+
+  // ---------- производные ----------
+  function perk(st, id) { return pk(st.meta, id); }
+  function hasC(st, id) { return st.run.contracts.indexOf(id) >= 0; }
+  function buffMult(st, kind) { let m = 1; for (const b of st.run.buffs) if (b.kind === kind) m *= b.mult; return m; }
+  function hasBuff(st, key) { return st.run.buffs.some(b => b.key === key); }
+  function eff(omega, ws) { const x = omega / ws; return 1 / (1 + x * x); }
+  function throughput(d, omega) { const w = Math.abs(omega); return w / TAU * d.B * d.cap * eff(w, d.ws); }
+  function derived(st) {
+    const r = st.run, lv = r.lv, S = STAGES[r.stage];
+    const shape = SHAPES[r.shape], B = r.blades;
+    const condK = 0.7 + 0.3 * r.cond;
+    const capFull = 4 * Math.pow(SIZE_G, lv.size) * shape.k * FILL[B] * (1 + 0.15 * perk(st, 'eng'));
+    const cap = capFull * condK * (r.broken ? 0.5 : 1);
+    const ws = shape.ws * (1 + 0.06 * perk(st, 'brave')) * (hasC(st, 'speed') ? 1.3 : 1);
+    const robot = hasBuff(st, 'robot');
+    const friction = 0.45 * Math.pow(0.9, lv.fly) * (1 - 0.1 * perk(st, 'bearing')) * (1 + 2 * (1 - r.cond)) * (robot ? 0.5 : 1);
+    const motorMax = lv.motor > 0 ? Math.min(MAX_OMEGA, 0.9 * Math.pow(1.18, lv.motor - 1) * (1 + 0.1 * perk(st, 'bearing')) * (hasC(st, 'eco') ? 0.8 : 1)) : 0;
+    const motorTarget = r.autoOpt ? Math.min(motorMax, ws) : motorMax * r.motorPct;
+    const handRatio = 1 + 0.2 * lv.gears;
+    const flyCap = 4 + 8 * (Math.pow(1.3, lv.fly) - 1);          // секунд работы на оптимуме
+    const chargeK = hasC(st, 'hand') ? 2 : 1;
+    const walkBase = S.loc * Math.pow(ADS_G, lv.ads) * (1 + 0.25 * perk(st, 'word'));
+    const walk = walkBase * buffMult(st, 'arr');
+    let transBonus = 0;
+    for (const t of TRANS) transBonus += (lv[t.id] || 0) * t.bonus;
+    const arrivals = walk * (1 + transBonus);
+    const share = transBonus / (1 + transBonus);
+    const feeBase = S.fee * Math.pow(FEE_G, lv.fee) * (1 + 0.25 * perk(st, 'brand')) * (hasC(st, 'nightm') ? 0.9 : 1) * (hasC(st, 'bus') ? 1 + share : 1);
+    const fee = feeBase * buffMult(st, 'price');
+    const comboCap = hasC(st, 'combo') ? 1 : 0.5;
+    const comboMult = 1 + Math.min(comboCap, 0.0025 * r.combo);
+    const d = { cap, capFull, ws, B, motorMax, motorTarget, friction, handRatio, flyCap, chargeK, walkBase, walk, transBonus, arrivals, feeBase, fee, comboCap, comboMult, shape, condK };
+    d.Topt = throughput(d, ws);
+    d.ToptFull = ws / TAU * B * capFull * 0.5;
+    // электричество: на оптимуме ≈ 10% от возможной выручки, растёт с квадратом скорости и трением
+    d.elecBase = 0.1 * fee * d.Topt * (friction / 0.45) * (hasC(st, 'eco') ? 0.4 : 1) * (hasC(st, 'hand') ? 2 : 1);
+    d.rent = S.rent * (hasC(st, 'rent') ? 0.5 : 1);
+    d.wearK = (hasC(st, 'speed') ? 2 : 1) * (1 - 0.08 * lv.crew);
+    d.crew = lv.crew;
+    return d;
+  }
+  function elecAt(d, omega) { const x = Math.abs(omega) / d.ws; return d.elecBase * x * x; }
+  // прибыль в установившемся режиме на заданных оборотах (для подсказок и офлайна)
+  function steady(st, d, omega, withElec) {
+    const T = throughput(d, omega), inc = Math.min(d.arrivals, T) * d.fee;
+    const el = withElec ? elecAt(d, omega) : 0;
+    return { T, inc, elec: el, rent: d.rent, profit: inc - d.rent - el };
+  }
+
+  // ---------- цены ----------
+  function upCost(st, id, lvl) { const u = UP[id]; if (lvl == null) lvl = st.run.lv[id]; return Math.max(u.min * Math.pow(1.6, lvl), u.k * Iref(u.x(lvl))); }
+  function upMax(st, id) { return UP[id].max(st); }
+  function upQuote(st, id, n) {
+    const r = st.run; const max = upMax(st, id); let lvl = r.lv[id];
+    let total = 0, cnt = 0;
+    const want = n === 'max' ? 1e9 : n;
+    while (cnt < want && lvl < max) {
+      const c = upCost(st, id, lvl);
+      if (n === 'max' && !isFree(st) && total + c > r.money) break;
+      total += c; cnt++; lvl++;
+    }
+    if (n === 'max' && cnt === 0 && r.lv[id] < max) { total = upCost(st, id); cnt = 1; }
+    return { cnt, total };
+  }
+  function addBuff(st, key, kind, mult, dur) {
+    const b = st.run.buffs.find(x => x.key === key);
+    if (b) { b.t = Math.max(b.t, dur); b.mult = mult; b.dur = Math.max(b.dur, dur); }
+    else st.run.buffs.push({ key, kind, mult, t: dur, dur });
+  }
+  function buyUp(st, id, n, ev) {
+    const q = upQuote(st, id, n);
+    if (!q.cnt || !pay(st, q.total)) return false;
+    const from = st.run.lv[id];
+    st.run.lv[id] += q.cnt;
+    if (id === 'size' && hasC(st, 'opening')) addBuff(st, 'opening', 'arr', 2, 20);
+    if (ev) ev.push({ type: 'buy', id, from, to: st.run.lv[id] });
+    return true;
+  }
+  function bladeCost(st) { const n = st.run.blades + 1; return n <= 8 ? BLADE_COSTS[n] : Infinity; }
+  function bladeLocked(st) { const n = st.run.blades + 1; return n > 8 ? 'max' : st.run.stage < BLADE_STAGE[n] ? BLADE_STAGE[n] : 0; }
+  function buyBlade(st, ev) {
+    const r = st.run, c = bladeCost(st);
+    if (bladeLocked(st) || !pay(st, c)) return false;
+    r.blades++;
+    const tot = r.loads.reduce((a, b) => a + b, 0);
+    r.Q += tot; r.loads = new Array(r.blades).fill(0);
+    if (ev) ev.push({ type: 'blades' });
+    return true;
+  }
+  function shapeLocked(st) { const n = st.run.shape + 1; return n >= SHAPES.length ? 'max' : st.run.stage < SHAPES[n].stage ? SHAPES[n].stage : 0; }
+  function buyShape(st, ev) {
+    const n = st.run.shape + 1;
+    if (shapeLocked(st) || !pay(st, SHAPES[n].cost)) return false;
+    st.run.shape = n;
+    if (ev) ev.push({ type: 'shape' });
+    return true;
+  }
+  function stageCost(st) { const n = st.run.stage + 1; return n < STAGES.length ? STAGES[n].cost * (hasC(st, 'rent') ? 1.25 : 1) : Infinity; }
+  function buyStage(st, ev) {
+    const c = stageCost(st);
+    if (!isFinite(c) || !pay(st, c)) return false;
+    st.run.stage++;
+    if (ev) ev.push({ type: 'stage', stage: st.run.stage });
+    return true;
+  }
+  // ---------- износ и ремонт ----------
+  // плановый ремонт: дверь встаёт на несколько секунд; аварийный (после поломки) — дороже и дольше
+  function repairCost(st, d) {
+    d = d || derived(st); const r = st.run;
+    return Math.max(10, (1 - r.cond) * d.feeBase * d.ToptFull * 120) * (r.broken ? 2.5 : 1) * (1 - 0.1 * r.lv.crew);
+  }
+  function repairTime(st) {
+    const r = st.run;
+    return (r.broken ? 25 + 50 * (1 - r.cond) : 4 + 20 * (1 - r.cond)) * (1 - 0.15 * r.lv.crew);
+  }
+  function breakRisk(st) { // вероятность поломки в секунду при работе на оптимуме
+    const c = st.run.cond; return c >= 0.5 ? 0 : 0.04 * Math.pow((0.5 - c) / 0.25, 2);
+  }
+  function repair(st, ev) {
+    const r = st.run;
+    if (r.repairT > 0 || (r.cond >= 0.999 && !r.broken)) return false;
+    const c = repairCost(st);
+    if (!afford(st, c)) return false;
+    if (!isFree(st)) { r.money -= c; st.life.spent += c; r.acc.rep += c; }
+    r.repairKind = r.broken ? 'emergency' : 'plan';
+    r.repairT = r.repairTotal = repairTime(st);
+    r.combo = 0; r.comboT = 0;
+    st.life.repairs++;
+    if (ev) ev.push({ type: 'repairStart', kind: r.repairKind, time: r.repairT });
+    return true;
+  }
+
+  // ---------- переоткрытие компании ----------
+  function seGain(st) { return Math.floor(Math.sqrt(st.run.admittedRun / SE_DIV)); }
+  function prestige(st) {
+    const g = seGain(st); if (g < 1) return false;
+    st.meta.se += g; st.meta.seTotal += g; st.meta.prestiges++;
+    st.run = newRun(st.meta);
+    return true;
+  }
+  function perkCost(st, id) { const p = PERKS.find(x => x.id === id); return p.cost(perk(st, id)); }
+  function buyPerk(st, id) {
+    const p = PERKS.find(x => x.id === id); const l = perk(st, id);
+    if (l >= p.max) return false; const cost = p.cost(l);
+    if (st.meta.se < cost) return false;
+    st.meta.se -= cost; st.meta.perks[id] = l + 1;
+    if (id === 'factory') { const r = st.run; r.lv.motor = Math.max(r.lv.motor, (l + 1) * 4); r.lv.fly = Math.max(r.lv.fly, (l + 1) * 3); r.lv.gears = Math.max(r.lv.gears, (l + 1) * 2); }
+    return true;
+  }
+  function toggleNextContract(st, id) {
+    const a = st.meta.nextContracts; const i = a.indexOf(id);
+    if (i >= 0) { a.splice(i, 1); return true; }
+    if (a.length >= contractSlots(st.meta)) return false;
+    a.push(id); return true;
+  }
+
+  // ---------- особые гости ----------
+  function specialInterval(st) { return (55 + Math.random() * 50) * Math.pow(0.75, perk(st, 'star')) * (hasC(st, 'fans') ? 0.5 : 1); }
+  function pickSpecial() {
+    const tot = SPECIALS.reduce((a, s) => a + s.w, 0); let x = Math.random() * tot;
+    for (const s of SPECIALS) { x -= s.w; if (x <= 0) return s; } return SPECIALS[0];
+  }
+  function activateSpecial(st, id) {
+    const d = derived(st); const k = Math.pow(1.25, perk(st, 'star'));
+    st.life.specials++;
+    if (id === 'idol') { addBuff(st, 'idol', 'arr', 3, 40 * k); st.run.Q += d.arrivals * 15; }
+    else if (id === 'guide') addBuff(st, 'guide', 'price', 3, 40 * k);
+    else if (id === 'parade') addBuff(st, 'parade', 'arr', 5, 25 * k);
+    else if (id === 'robot') { const r = st.run; r.cond = 1; r.broken = false; r.repairT = 0; addBuff(st, 'robot', 'none', 1, 90 * k); }
+    else if (id === 'courier') {
+      const est = Math.max(st.run.rate.rev, steady(st, d, d.motorTarget || d.ws, false).inc);
+      const gift = Math.max(100, est * 90 * k);
+      st.run.money += gift; st.run.moneyRun += gift; st.life.money += gift;
+      return gift;
+    }
+    return 0;
+  }
+
+  // ---------- шаг симуляции ----------
+  // input: { hand: bool, handOmega: рад/с курсора, push: bool }
+  function step(st, dt, input, ev) {
+    const r = st.run; const d = derived(st);
+    input = input || {};
+    r.runTime += dt; st.life.time += dt;
+
+    // --- кто крутит дверь: рука → маховик → автопривод ---
+    let w = r.omega, driver = 'none';
+    if (r.repairT > 0) {
+      // ремонт: дверь заблокирована, бригада работает
+      w -= w * Math.min(1, 4 * dt); if (Math.abs(w) < 0.01) w = 0;
+      r.repairT -= dt;
+      if (r.repairT <= 0) {
+        r.repairT = 0; r.cond = 1;
+        const was = r.broken; r.broken = false;
+        if (ev) ev.push({ type: 'repaired', kind: was ? 'emergency' : 'plan' });
+      }
+      driver = 'repair';
+    } else if (r.broken) {
+      // поломка: ось заклинило, автопривод и маховик не тянут; руками — еле-еле
+      const lim = d.ws * 0.25;
+      if (input.hand && Math.abs(input.handOmega || 0) > 0.2) {
+        const h = Math.sign(input.handOmega) * Math.min(lim, Math.abs(input.handOmega) * d.handRatio * 0.15);
+        w += (h - w) * Math.min(1, 0.8 * dt); driver = 'hand';
+      } else if (input.push) {
+        w += (lim * 0.8 - w) * Math.min(1, 0.6 * dt); driver = 'hand';
+      }
+      w -= w * Math.max(0.6, d.friction * 3) * dt;
+      if (Math.abs(w) < 0.004 && driver === 'none') w = 0;
+      if (driver === 'none') driver = 'broken';
+    } else {
+      if (input.hand && Math.abs(input.handOmega || 0) > 0.2) {
+        const hw = Math.max(-HAND_MAX, Math.min(HAND_MAX, input.handOmega));
+        const h = hw * d.handRatio;
+        const opposite = Math.sign(h) !== Math.sign(w) && Math.abs(h) > 0.3;
+        if (Math.abs(h) > Math.abs(w) || opposite) w += (h - w) * Math.min(1, 6 * dt);
+        r.E = Math.min(d.flyCap, r.E + Math.abs(hw) * d.handRatio * 0.12 * d.chargeK * dt);
+        driver = 'hand';
+      } else if (input.push) {
+        if (w < d.ws) w += (d.ws - w) * Math.min(1, 3 * dt);
+        r.E = Math.min(d.flyCap, r.E + 0.7 * d.handRatio * d.chargeK * dt);
+        driver = 'hand';
+      }
+      if (driver === 'none') {
+        if (r.E > 0.01 && w < d.ws * 0.999) {
+          w += (d.ws - w) * Math.min(1, 2 * dt); r.E = Math.max(0, r.E - dt); driver = 'fly';
+        } else if (d.motorTarget > 0 && w < d.motorTarget) {
+          w += (d.motorTarget - w) * Math.min(1, 1.3 * dt); driver = 'motor';
+        }
+      }
+      if (driver === 'none') w -= w * d.friction * dt;
+      else if (driver === 'hand') w -= w * d.friction * 0.3 * dt;
+      if (Math.abs(w) < 0.002 && driver === 'none') w = 0;
+    }
+    w = Math.max(-MAX_OMEGA, Math.min(MAX_OMEGA, w));
+    r.omega = w; r.driver = driver;
+    if (Math.abs(w) > st.life.maxOmega) st.life.maxOmega = Math.abs(w);
+
+    // --- износ растёт с квадратом скорости; ниже 50% — риск поломки ---
+    if (r.repairT <= 0 && !r.broken) {
+      const xw = Math.abs(w) / d.ws;
+      if (!hasBuff(st, 'robot')) r.cond = Math.max(0.2, r.cond - 0.0007 * xw * xw * d.wearK * dt);
+      if (r.cond < 0.5 && xw > 0.05) {
+        const p = breakRisk(st) * Math.min(1.5, xw);
+        if (r.cond <= 0.25 || Math.random() < p * dt) {
+          r.broken = true; r.combo = 0; r.comboT = 0; r.E = 0; st.life.breakdowns++;
+          if (ev) ev.push({ type: 'breakdown' });
+        }
+      }
+    }
+    if (st.settings.autoRepair && r.lv.crew >= 1 && r.repairT <= 0 && (r.broken || r.cond < 0.6)) repair(st, ev);
+
+    // --- приход людей ---
+    r.Q += d.walk * dt;
+    for (const t of TRANS) {
+      const lvl = r.lv[t.id]; if (!lvl) continue;
+      r.tTimers[t.id] = (r.tTimers[t.id] == null ? t.every * Math.random() : r.tTimers[t.id]) - dt;
+      if (r.tTimers[t.id] <= 0) {
+        r.tTimers[t.id] += t.every;
+        const amt = d.walk * lvl * t.bonus * t.every;
+        r.Q += amt;
+        if (ev) ev.push({ type: 'transport', id: t.id, amount: amt });
+      }
+    }
+    r.Q -= r.Q * LEAVE_RATE * dt;
+    if (r.Q < 1e-6) r.Q = 0;
+
+    // --- вращение и отсеки ---
+    if (Math.abs(r.theta) > 1e6) r.theta %= TAU;
+    const th0 = r.theta, th1 = th0 + w * dt;
+    r.theta = th1;
+    const B = r.blades, seg = TAU / B;
+    if (r.loads.length !== B) r.loads = new Array(B).fill(0);
+    const aw = Math.abs(w), e = eff(aw, d.ws), x = aw / d.ws;
+    const capNow = d.cap * e;
+    let admitted = 0, flungSum = 0;
+    if (w !== 0) {
+      const H = Math.PI / 2;
+      for (let j = 0; j < B; j++) {
+        const p0 = th0 + (j + 0.5) * seg, p1 = th1 + (j + 0.5) * seg;
+        const ks = [];
+        if (p1 > p0) { for (let k = Math.floor((p0 - H) / Math.PI) + 1, kb = Math.floor((p1 - H) / Math.PI); k <= kb; k++) ks.push(k); }
+        else { for (let k = Math.ceil((p0 - H) / Math.PI) - 1, ka = Math.ceil((p1 - H) / Math.PI); k >= ka; k--) ks.push(k); }
+        for (const k of ks) {
+          if ((((k % 2) + 2) % 2) === 0) { // улица — посадка
+            const avail = r.Q;
+            const take = Math.min(avail, Math.max(0, capNow - r.loads[j]));
+            if (take > 0) { r.loads[j] += take; r.Q -= take; if (ev) ev.push({ type: 'board', j, amount: take }); }
+            if (x > 1.05) { // перекрутили: часть людей отбрасывает, они встают и возвращаются в очередь
+              const fl = Math.min(avail - take, d.cap * (1 - e)) * Math.min(1, x - 1);
+              if (fl > 0.3) {
+                flungSum += fl; r.combo++; r.comboT = 2.5;
+                if (r.combo > st.life.maxCombo) st.life.maxCombo = r.combo;
+                if (ev) ev.push({ type: 'fling', j, amount: fl, omega: w });
+              }
+            }
+          } else if (r.loads[j] > 0) { // магазин — высадка
+            const a = r.loads[j]; r.loads[j] = 0; admitted += a;
+            if (ev) ev.push({ type: 'eject', j, amount: a, omega: w });
+          }
+        }
+      }
+    }
+    r.comboT -= dt; if (r.comboT <= 0) { r.combo = 0; r.comboT = 0; }
+
+    // --- касса ---
+    const rev = admitted * d.fee * d.comboMult;
+    const elec = driver === 'motor' ? elecAt(d, w) * dt : 0;
+    const rent = d.rent * dt;
+    if (admitted) { r.admittedRun += admitted; st.life.admitted += admitted; }
+    st.life.flung += flungSum;
+    r.money += rev; r.moneyRun += rev; st.life.money += rev;
+    r.money -= rent + elec;
+    if (r.money < 0) r.money = 0;
+    const A = r.acc; A.rev += rev; A.rent += rent; A.elec += elec; A.adm += admitted; A.fl += flungSum; A.t += dt;
+    if (A.t >= 1) {
+      r.win.push([A.rev, A.rent, A.elec, A.rep, A.adm, A.fl, A.t]);
+      if (r.win.length > 8) r.win.shift();
+      const s = [0, 0, 0, 0, 0, 0, 0]; for (const row of r.win) for (let i = 0; i < 7; i++) s[i] += row[i];
+      const T = s[6];
+      r.rate = { rev: s[0] / T, rent: s[1] / T, elec: s[2] / T, rep: s[3] / T, adm: s[4] / T, fl: s[5] / T, profit: (s[0] - s[1] - s[2] - s[3]) / T };
+      r.hist.push(r.rate.profit); if (r.hist.length > 120) r.hist.shift();
+      r.acc = { rev: 0, rent: 0, elec: 0, rep: 0, adm: 0, fl: 0, t: 0 };
+    }
+
+    // --- баффы ---
+    for (const b of r.buffs) b.t -= dt;
+    r.buffs = r.buffs.filter(b => b.t > 0);
+
+    // --- особые гости ---
+    r.specialT -= dt;
+    if (r.specialT <= 0) { r.specialT = specialInterval(st); if (ev) ev.push({ type: 'special', spec: pickSpecial() }); }
+
+    // --- победа ---
+    if (!st.won && st.life.admitted >= GOAL) { st.won = true; st.wonAt = st.life.time; if (ev) ev.push({ type: 'win' }); }
+    return d;
+  }
+
+  // ---------- доход вне игры ----------
+  function offlineShare(st) { return hasC(st, 'nightm') ? 1 : Math.min(1, 0.25 + 0.25 * perk(st, 'night')); }
+  function offline(st, seconds) {
+    seconds = Math.min(seconds, 12 * 3600);
+    if (seconds < 30) return null;
+    const r = st.run;
+    if (r.repairT > 0) { const tt = Math.min(seconds, r.repairT); r.repairT -= tt; if (r.repairT <= 0) { r.repairT = 0; r.cond = 1; r.broken = false; } }
+    if (r.broken) return { seconds, people: 0, money: 0, share: 0, broke: true, already: true };
+    const d = derived(st);
+    if (!d.motorTarget) return null;
+    const k = offlineShare(st);
+    const s = steady(st, d, d.motorTarget, true);
+    const x = d.motorTarget / d.ws, wear = 0.0007 * x * x * d.wearK;   // износ в секунду
+    let work = seconds, broke = false, repCost = 0;
+    if (st.settings.autoRepair && r.lv.crew >= 1) {
+      // бригада чинит при 60%: простой и расходы на ремонт пропорциональны износу
+      const cycle = 0.4 / Math.max(1e-9, wear), down = (4 + 20 * 0.4) * (1 - 0.15 * r.lv.crew);
+      work = seconds * cycle / (cycle + down);
+      repCost = Math.max(10, 0.4 * d.feeBase * d.ToptFull * 120) * (1 - 0.1 * r.lv.crew) * (seconds / (cycle + down));
+      r.cond = Math.max(0.6, r.cond - wear * (seconds % (cycle + down)));
+    } else {
+      const tBreak = wear > 0 ? Math.max(0, (r.cond - 0.35) / wear) : Infinity;
+      if (tBreak < seconds) { work = tBreak; broke = true; r.cond = 0.3; r.broken = true; r.omega = 0; }
+      else r.cond = Math.max(0.2, r.cond - wear * seconds);
+    }
+    const people = Math.min(d.arrivals, s.T) * work * k;
+    const money = Math.max(0, Math.max(0, s.profit) * work * k - repCost - (broke ? d.rent * (seconds - work) : 0));
+    if (people < 1 && !broke) return null;
+    r.money += money; r.moneyRun += money; st.life.money += money;
+    r.admittedRun += people; st.life.admitted += people;
+    return { seconds, people, money, share: k, broke, workMin: work / 60 };
+  }
+
+  // ---------- сохранение ----------
+  function serialize(st) {
+    st.lastSave = Date.now();
+    const clean = Object.assign({}, st, { run: Object.assign({}, st.run, { win: [], tTimers: {}, hist: st.run.hist.slice(-60) }) });
+    return JSON.stringify(clean);
+  }
+  function deserialize(str) {
+    const o = JSON.parse(str);
+    if (!o || !o.run || !o.meta) throw new Error('bad save');
+    if ((o.v || 1) < 3) throw new Error('old');
+    const base = newState();
+    const st = Object.assign(base, o);
+    st.meta = Object.assign({ perks: {}, se: 0, seTotal: 0, prestiges: 0, nextContracts: [] }, o.meta);
+    st.life = Object.assign(newState().life, o.life);
+    st.settings = Object.assign(newState().settings, o.settings);
+    if (!Array.isArray(st.log)) st.log = [];
+    const fresh = newRun(st.meta);
+    st.run = Object.assign(fresh, o.run);
+    st.run.lv = Object.assign(fresh.lv, o.run.lv || {});
+    st.run.win = []; st.run.tTimers = {};
+    st.run.acc = { rev: 0, rent: 0, elec: 0, rep: 0, adm: 0, fl: 0, t: 0 };
+    if (!Array.isArray(st.run.hist)) st.run.hist = [];
+    if (!Array.isArray(st.run.contracts)) st.run.contracts = [];
+    if (!Array.isArray(st.run.loads) || st.run.loads.length !== st.run.blades) st.run.loads = new Array(st.run.blades).fill(0);
+    if (!isFinite(st.run.money)) st.run.money = 0;
+    return st;
+  }
+
+  return {
+    TAU, GOAL, MAX_OMEGA, HAND_MAX, LEAVE_RATE, STAGES, SHAPES, FILL, TRANS, UP, PERKS, CONTRACTS, SPECIALS, SPECIAL_HINT,
+    BLADE_COSTS, BLADE_STAGE, START_MONEY, IREF, Iref, TRANS_MAX, SIZE_G, ADS_G, FEE_G,
+    fmt, fmtMoney, plural, newState, newRun, derived, eff, throughput, elecAt, steady,
+    upCost, upMax, upQuote, buyUp, bladeCost, bladeLocked, buyBlade, shapeLocked, buyShape, stageCost, buyStage,
+    repairCost, repairTime, breakRisk, repair, seGain, prestige, perk, perkCost, buyPerk, contractSlots, toggleNextContract, hasC, hasBuff,
+    activateSpecial, addBuff, step, offline, offlineShare, serialize, deserialize, isFree, afford, pay,
+  };
+})();
+if (typeof module !== 'undefined') module.exports = Logic;
+
+</script>
+<script>
+/* ================================================================
+   КРУГОВОРОТ — отрисовка, интерфейс, звук
+   ================================================================ */
+(() => {
+  'use strict';
+  const L = Logic;
+  const TAU = Math.PI * 2;
+  const K = 0.5;                       // сжатие глубины (вид 3/4)
+  const SAVE_KEY = 'krugovorot.save.v3';
+  let MAXC = 900, MAXW = 260, MAXIN = 1200; const MAXR = 36;
+  function applyCrowd() { const c = (st && st.settings.crowd) || 1200; MAXC = Math.round(c * 0.75); MAXW = Math.max(80, Math.round(c / 4)); MAXIN = c; }
+  const $ = (s, r) => (r || document).querySelector(s);
+  const fmt = L.fmt, fmtMoney = L.fmtMoney;
+
+  const cv = $('#cv'), ctx = cv.getContext('2d');
+  let st = null, W = 0, H = 0, DPR = 1;
+  const cam = { cx: 0, cy: 0, s: 80, zoom: 1, view: { left: 0, right: 0, top: 0, bottom: 0 } };
+  let C = { paper: '#e6e8e3', ink: '#121412', ink2: '#565b54', rule: '#b6bab1', panel: '#f2f3ef' };
+  const PAT = {};
+  let reduceMotion = false;
+  try { reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* нет поддержки */ }
+
+  // ---------------- хранилище ----------------
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+  function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { /* нет доступа */ } }
+  function save() { if (st) lsSet(SAVE_KEY, L.serialize(st)); }
+
+  // ---------------- тема ----------------
+  function applyTheme() {
+    const t = st.settings.theme, root = document.documentElement;
+    if (t === 'auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t);
+    applyWhite();
+  }
+  function readColors() {
+    const cs = getComputedStyle(document.documentElement);
+    const g = n => cs.getPropertyValue(n).trim();
+    C = { paper: g('--paper'), ink: g('--ink'), ink2: g('--ink-2'), rule: g('--rule'), panel: g('--panel') };
+    buildPatterns();
+  }
+  function buildPatterns() {
+    const mk = (w, h, draw) => {
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const g = c.getContext('2d'); draw(g); return ctx.createPattern(c, 'repeat');
+    };
+    PAT.hatch = mk(7, 7, g => { g.strokeStyle = C.ink; g.globalAlpha = 0.32; g.lineWidth = 1; g.beginPath(); g.moveTo(-1, 8); g.lineTo(8, -1); g.stroke(); });
+    PAT.dots = mk(4, 4, g => { g.fillStyle = C.ink; g.globalAlpha = 0.16; g.fillRect(0, 0, 1, 1); g.fillRect(2, 2, 1, 1); });
+    PAT.dense = mk(3, 3, g => { g.fillStyle = C.ink; g.globalAlpha = 0.45; g.fillRect(0, 0, 1, 1); g.fillRect(1, 2, 1, 1); });
+    PAT.road = mk(6, 6, g => { g.fillStyle = C.ink; g.globalAlpha = 0.11; g.fillRect(0, 0, 1, 1); g.fillRect(3, 3, 1, 1); g.fillRect(3, 0, 1, 1); });
+  }
+  try {
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (st) applyWhite(); });
+  } catch (e) { /* старые браузеры */ }
+
+  // ---------------- геометрия сцены ----------------
+  function dims() {
+    const s = st.run.stage;
+    const Rv = 1 + 0.75 * (1 - Math.pow(0.9, st.run.lv.size)) + 0.12 * s;
+    const Wb = Math.max(Rv + 1.3, 2.1 + 0.8 * s);
+    const Db = 1.9 + 0.5 * s;
+    return { Rv, Wb, Db, Hd: 0.34, Hw: 0.42, Hb: 0.75 + 0.42 * s, stage: s };
+  }
+  const FORCE_MOBILE = !!window.KRUG_FORCE_MOBILE;
+  function isMobile() { return FORCE_MOBILE || W <= 760; }
+  function applySheet() {
+    const b = document.body, m = isMobile();
+    b.classList.toggle('m', m);
+    const sh = (st && st.settings.sheet) || 'half';
+    for (const k of ['collapsed', 'half', 'full']) b.classList.toggle('sheet-' + k, m && sh === k);
+  }
+  function layout() {
+    applySheet();
+    const panel = $('.panel');
+    const pr = panel.getBoundingClientRect();
+    const narrow = isMobile();
+    let left = 0, right = W, top = 118, bottom = H - 62;
+    if (narrow) {
+      const gap = Math.max(0, H - pr.top);
+      document.body.style.setProperty('--sheet-gap', gap + 'px');
+      bottom = pr.top - 46; top = 112;
+      if (bottom - top < 160) top = Math.max(70, bottom - 160);
+    } else { right = pr.left - 8; if (W <= 1000) bottom = H - 16; }
+    cam.view = { left, right, top, bottom };
+  }
+  // цель камеры: вся композиция (здание, дверь, улица) помещается в свободную область
+  function fitCamera(d, instant) {
+    const v = cam.view, aw = Math.max(200, v.right - v.left), ah = Math.max(160, v.bottom - v.top);
+    const tower = d.stage >= 5 ? Math.min(2, 1.6 + (d.stage - 4) * 1.4) : 0;
+    const topExt = d.Db * K + d.Hb + tower * 0.6 + 0.25;
+    const botExt = (roadYW(d) + (rails() ? 2.55 : 1.9)) * K + 0.12;
+    const halfW = isMobile() ? Math.max(d.Wb + 0.3, 2.7) : Math.max(d.Wb + 0.7, 3.8);
+    const s = Math.max(24, Math.min(125, ah / (topExt + botExt), aw / (2 * halfW)));
+    const cy = v.top + topExt * s + Math.max(0, (ah - (topExt + botExt) * s) / 2);
+    const cx = v.left + aw / 2;
+    if (instant) { cam.s = s; cam.cy = cy; cam.cx = cx; return; }
+    cam.s += (s - cam.s) * 0.06; cam.cy += (cy - cam.cy) * 0.06; cam.cx += (cx - cam.cx) * 0.2;
+  }
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    layout();
+  }
+  const px = x => cam.cx + x * cam.s;
+  const py = (y, z) => cam.cy + y * cam.s * K - (z || 0) * cam.s;
+  const edgeL = () => (cam.view.left - 20 - cam.cx) / cam.s;
+  const edgeR = () => (cam.view.right + 20 - cam.cx) / cam.s;
+  const roadYW = d => d.Rv + 2.5;
+  const rails = () => st.run.stage >= 5 || st.run.lv.train > 0;
+  const roadY = roadYW;
+
+  // ---------------- визуальные сущности ----------------
+  const V = {
+    crowd: [], walkers: [], leavers: [], passers: [], riders: [], inside: [], floats: [], vehicles: [], specials: [], sources: [],
+    w: 1, wPending: 1, wTimer: 0, ejAgg: 0, ejT: 0, spawnAcc: 0, metroPulse: 0,
+    flyers: [], smoke: [], comboPop: 0, comboT: 0, repairFlash: 0, clankT: 0,
+    hand: { active: false, pid: null, lastA: 0, lastT: 0, omega: 0, lastMove: 0, sx: 0, sy: 0 },
+    push: false, hover: null, skyline: [],
+  };
+  const BENDS = [r => 0, r => 0.35 * r, r => 0.55 * Math.sin(Math.PI * r), r => 0.95 * r, r => 1.25 * r * r, r => 1.7 * r, r => 2.3 * r];
+  const bend = r => BENDS[Math.min(st.run.shape, BENDS.length - 1)](r);
+
+  function slotPos(i, d) {
+    const r = 0.12 * Math.sqrt(i + 0.6);
+    const a = 0.22 + ((i * 2.39996) % (Math.PI - 0.44));
+    return [Math.cos(a) * r * 1.3, d.Rv + 0.16 + Math.sin(a) * r * 0.95];
+  }
+  function stochRound(x) { const f = Math.floor(x); return f + (Math.random() < x - f ? 1 : 0); }
+  function resetRiders() { V.riders = Array.from({ length: st.run.blades }, () => []); }
+
+  function flagChance() {
+    const b = st.run.buffs;
+    if (b.some(x => x.key === 'parade')) return Math.random() < 0.35;
+    if (b.some(x => x.key === 'guide')) return Math.random() < 0.12;
+    return false;
+  }
+  function spawnWalker(d) {
+    let x, y;
+    const src = V.sources.find(s => s.n > 0 && s.t > 0);
+    if (src) { src.n--; x = src.x + (Math.random() - 0.5) * src.spread; y = src.y + (Math.random() - 0.5) * 0.2; }
+    else {
+      const side = Math.random() < 0.5 ? -1 : 1;
+      x = side < 0 ? edgeL() - Math.random() * 0.6 : edgeR() + Math.random() * 0.6;
+      y = d.Rv + 0.6 + Math.random() * (roadY(d) - d.Rv - 0.9);
+    }
+    V.walkers.push({ x, y, z: 0, ph: Math.random() * TAU, spd: 1.0 + Math.random() * 0.7, flag: flagChance() });
+  }
+  function seatXY(j, p, d) {
+    const seg = TAU / st.run.blades;
+    const a = st.run.theta + (j + p.u) * seg + bend(p.r);
+    return [Math.cos(a) * p.r * d.Rv, Math.sin(a) * p.r * d.Rv];
+  }
+  function boardVisual(j, amount, d) {
+    if (!V.riders[j]) return;
+    let k = Math.min(stochRound(amount / V.w), MAXR - V.riders[j].length);
+    while (k-- > 0) {
+      const src = V.crowd.length ? V.crowd.shift() : null;
+      const p = { r: 0.22 + Math.random() * 0.68, u: 0.16 + Math.random() * 0.68, t: 0 };
+      if (src) { p.x0 = src.x; p.y0 = src.y; p.flag = src.flag; } else { p.x0 = (Math.random() - 0.5) * 0.4; p.y0 = d.Rv + 0.15; }
+      V.riders[j].push(p);
+    }
+  }
+  function addInside(x, y, omega, flag) {
+    if (V.inside.length >= MAXIN) V.inside.shift();
+    const a = Math.atan2(y, x), r = Math.hypot(x, y);
+    const tang = omega * r * 0.55;
+    const sp = Math.abs(omega);
+    const vz = sp > 3 ? (sp - 3) * 0.07 * (0.5 + Math.random()) : 0;
+    V.inside.push({
+      x, y, z: 0, flag, st: 'fly', t: 0, ph: Math.random() * TAU,
+      vx: -Math.sin(a) * tang + (Math.random() - 0.5) * 0.5,
+      vy: Math.cos(a) * tang - 0.8 - Math.random() * 0.6,
+      vz,
+    });
+    if (vz > 0.6) st.life.flung += V.w;
+  }
+  function ejectVisual(j, amount, omega, d) {
+    const list = V.riders[j] || [];
+    V.riders[j] = [];
+    for (const p of list) { const [x, y] = seatXY(j, p, d); addInside(x, y, omega, p.flag); }
+    if (!list.length) {
+      const extra = Math.min(12, stochRound(amount / V.w));
+      for (let i = 0; i < extra; i++) {
+        const [x, y] = seatXY(j, { r: 0.3 + Math.random() * 0.6, u: 0.2 + Math.random() * 0.6 }, d);
+        addInside(x, y, omega, false);
+      }
+    }
+    V.ejAgg += amount;
+  }
+  function flingVisual(j, amount, omega, d) {
+    V.comboPop = st.run.combo; V.comboT = 0.25; sfx('combo');
+    if (st.run.combo % 10 === 0) buzz(15);
+    let k = Math.min(14, Math.max(1, stochRound(amount / V.w)));
+    const seg = TAU / st.run.blades;
+    while (k-- > 0) {
+      if (V.flyers.length > 300) V.flyers.shift();
+      const src = V.crowd.length ? V.crowd.shift() : null;
+      const a = st.run.theta + (j + 0.5) * seg;
+      const x0 = src ? src.x : Math.cos(a) * d.Rv, y0 = src ? src.y : d.Rv + 0.1;
+      const sp = Math.min(3.2, 0.8 + Math.abs(omega) * 0.12);
+      const side = Math.sign(omega || 1) * (Math.random() * 0.8 + 0.2);
+      V.flyers.push({ x: x0, y: y0, z: 0.05, vx: side * sp * (0.6 + Math.random()), vy: sp * (0.4 + Math.random() * 0.8), vz: 1.2 + Math.random() * 1.6, st: 'fly', t: 0, ph: 0, spin: Math.random() * TAU });
+    }
+  }
+  function rescale(nw) {
+    const ratio = V.w / nw;
+    V.w = nw; V.wTimer = 0;
+    if (ratio < 1) {
+      V.crowd.length = Math.floor(V.crowd.length * ratio);
+      V.walkers.length = Math.floor(V.walkers.length * ratio);
+      for (let j = 0; j < V.riders.length; j++) V.riders[j].length = Math.ceil(V.riders[j].length * ratio);
+    }
+  }
+  function updateWeight(dt, d, D) {
+    const capEff = D.cap * Math.max(0.05, L.eff(Math.max(Math.abs(st.run.omega), D.motorTarget || 1), D.ws));
+    const ck = (st.settings.crowd || 1200) / 1200;
+    const need = Math.max(1, capEff / (16 * Math.min(2, ck)), D.arrivals / (2500 * ck));
+    const target = Math.pow(10, Math.max(0, Math.ceil(Math.log10(need) - 1e-9)));
+    if (target === V.w) { V.wTimer = 0; return; }
+    if (target !== V.wPending) { V.wPending = target; V.wTimer = 0; return; }
+    V.wTimer += dt;
+    if (V.wTimer > (target > V.w ? 0.6 : 2.5)) rescale(target);
+  }
+
+  // ---------------- транспорт и гости ----------------
+  const VEH = {
+    bus:    { kind: 'road', len: 2.1, dep: 0.5, h: 0.6, lane: 0, label: 'А' },
+    metro:  { kind: 'metro' },
+    train:  { kind: 'rail', len: 1.6, cars: 5, dep: 0.45, h: 0.58 },
+    plane:  { kind: 'sky', shape: 'plane' },
+  };
+  function spawnVehicle(id, amount, d) {
+    const def = VEH[id]; if (!def) return;
+    const dots = Math.min(160, Math.max(4, Math.round(amount / V.w)));
+    if (V.sources.length > 16) V.sources.shift();
+    if (V.vehicles.length >= 8 && def.kind !== 'metro') { V.sources.push({ x: Math.random() < 0.5 ? edgeL() : edgeR(), y: d.Rv + 1.4, spread: 0.4, n: dots, t: 4 }); return; }
+    const ry = roadY(d);
+    if (def.kind === 'road' || def.kind === 'rail') {
+      const total = def.kind === 'rail' ? def.cars * (def.len + 0.12) : def.len;
+      const y = def.kind === 'rail' ? ry + 1.55 : ry + 0.3 + def.lane;
+      const stopX = -total / 2 - 0.4 + (Math.random() - 0.5) * 1.5;
+      V.vehicles.push({ id, def, x: edgeL() - total - 0.5, y, stopX, total, phase: 'in', t: 0, dots, speed: def.kind === 'rail' ? 9 : 6 });
+    } else if (def.kind === 'metro') {
+      V.metroPulse = 1.6;
+      V.sources.push({ x: metroPos(d)[0], y: metroPos(d)[1] - 0.15, spread: 0.3, n: dots, t: 6 });
+    } else if (def.kind === 'sky') {
+      V.vehicles.push({ id, def, phase: 'fly', t: 0, dots, dir: Math.random() < 0.5 ? 1 : -1 });
+      V.sources.push({ x: Math.random() < 0.5 ? edgeL() : edgeR(), y: d.Rv + 1.4, spread: 0.4, n: dots, t: 6 });
+    } else if (def.kind === 'rocket') {
+      const x = Math.min(edgeR() - 1.2, d.Wb + 2.4);
+      V.vehicles.push({ id, def, x, y: ry - 0.6, phase: 'down', t: 0, dots, z: 9 });
+    }
+  }
+  function metroPos(d) { return [Math.min(edgeR() - 0.9, d.Wb + 1.1), roadY(d) - 0.55]; }
+  function busStopX(d) { return Math.max(edgeL() + 0.8, -d.Wb - 0.9); }
+
+  function spawnSpecial(spec, d) {
+    if (V.specials.filter(x => x.state === 'walk').length >= 3) return;
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    const y = roadY(d) - 0.45;
+    V.specials.push({ spec, x: dir > 0 ? edgeL() : edgeR(), y, dir, ph: 0, state: 'walk', t: 0 });
+    sfx('ping');
+  }
+  function hitSpecial(sx, sy) {
+    for (const s of V.specials) {
+      if (s.state !== 'walk') continue;
+      const X = px(s.x), Y = py(s.y, 0);
+      const rr = isMobile() ? 34 : 22;
+      if (Math.abs(sx - X) < rr && sy > Y - 54 && sy < Y + 16) return s;
+    }
+    return null;
+  }
+  function clickSpecial(s) {
+    const gift = L.activateSpecial(st, s.spec.id);
+    s.state = 'run';
+    let msg = s.spec.msg;
+    if (s.spec.id === 'courier') msg = `Курьер привёз ${fmtMoney(gift)} — выручку соседней точки`;
+    toast(msg); sfx('special');
+    logEvent(`Особый гость: ${s.spec.tag.toLowerCase()}`);
+    V.floats.push({ x: s.x, y: s.y, z: 0.6, text: s.spec.tag, t: 0, life: 1.6, big: true });
+  }
+
+  // ---------------- звук ----------------
+  const Snd = {
+    ctx: null,
+    init() {
+      if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      try { this.ctx = new AC(); } catch (e) { return; }
+      const c = this.ctx;
+      this.master = c.createGain(); this.master.gain.value = 0.8 * (st.settings.volume ?? 0.7); this.master.connect(c.destination);
+      const o = c.createOscillator(); o.type = 'triangle'; o.frequency.value = 45;
+      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 380;
+      this.humG = c.createGain(); this.humG.gain.value = 0;
+      o.connect(lp); lp.connect(this.humG); this.humG.connect(this.master); o.start(); this.hum = o;
+      const buf = c.createBuffer(1, c.sampleRate * 2, c.sampleRate), dd = buf.getChannelData(0);
+      for (let i = 0; i < dd.length; i++) dd[i] = Math.random() * 2 - 1;
+      this.noiseBuf = buf;
+      const n = c.createBufferSource(); n.buffer = buf; n.loop = true;
+      this.bp = c.createBiquadFilter(); this.bp.type = 'bandpass'; this.bp.frequency.value = 500; this.bp.Q.value = 0.7;
+      this.whG = c.createGain(); this.whG.gain.value = 0;
+      n.connect(this.bp); this.bp.connect(this.whG); this.whG.connect(this.master); n.start();
+      this.lastTick = 0;
+    },
+    update(omega) {
+      if (!this.ctx) return;
+      const on = st.settings.soundMode === 'all', w = Math.abs(omega), t = this.ctx.currentTime;
+      this.master.gain.setTargetAtTime(0.8 * (st.settings.volume ?? 0.7), t, 0.05);
+      this.hum.frequency.setTargetAtTime(38 + Math.min(w, 42) * 6, t, 0.12);
+      this.humG.gain.setTargetAtTime(on ? Math.min(0.07, w * 0.012) : 0, t, 0.2);
+      this.whG.gain.setTargetAtTime(on ? Math.min(0.06, w * 0.0035) : 0, t, 0.2);
+      this.bp.frequency.setTargetAtTime(260 + Math.min(w, 42) * 45, t, 0.12);
+      if (st.run.broken && on) { // скрежет заклинившей оси
+        const grind = Math.min(0.09, 0.02 + w * 0.6);
+        this.whG.gain.setTargetAtTime(st.run.driver === 'hand' ? grind : 0.012, t, 0.08);
+        this.bp.frequency.setTargetAtTime(140 + Math.random() * 120, t, 0.03);
+      }
+    },
+    tone(freqs, dur, type, vol, gap) {
+      if (!this.ctx || st.settings.soundMode === 'off') return;
+      const c = this.ctx, t0 = c.currentTime;
+      freqs.forEach((f, i) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = type || 'square'; o.frequency.value = f;
+        const s = t0 + i * (gap || 0.07);
+        g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(vol || 0.05, s + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, s + dur);
+        o.connect(g); g.connect(this.master); o.start(s); o.stop(s + dur + 0.02);
+      });
+    },
+    tick() {
+      if (!this.ctx || st.settings.soundMode !== 'all') return;
+      const now = this.ctx.currentTime; if (now - this.lastTick < 0.07) return; this.lastTick = now;
+      const c = this.ctx, src = c.createBufferSource(); src.buffer = this.noiseBuf;
+      const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2500;
+      const g = c.createGain(); g.gain.setValueAtTime(0.06, now); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+      src.connect(f); f.connect(g); g.connect(this.master); src.start(now, Math.random()); src.stop(now + 0.05);
+    },
+  };
+  function buzz(pattern) { try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { /* нет вибрации */ } }
+  function sfx(kind) {
+    if (kind === 'buy') Snd.tone([660, 990], 0.09, 'square', 0.035, 0.05);
+    else if (kind === 'deny') Snd.tone([180], 0.12, 'square', 0.03);
+    else if (kind === 'ping') Snd.tone([1320, 1760], 0.25, 'sine', 0.05, 0.09);
+    else if (kind === 'special') Snd.tone([523, 659, 784, 1046], 0.18, 'triangle', 0.06, 0.06);
+    else if (kind === 'stage') Snd.tone([392, 523, 659, 784, 1046], 0.35, 'triangle', 0.07, 0.09);
+    else if (kind === 'combo') { if (st.settings.soundMode === 'all') Snd.tone([880 + Math.min(40, V.comboPop) * 12], 0.05, 'triangle', 0.025); }
+    else if (kind === 'repair') Snd.tone([300, 450, 600], 0.08, 'square', 0.03, 0.04);
+    else if (kind === 'fixed') Snd.tone([523, 784, 1046], 0.16, 'triangle', 0.05, 0.08);
+    else if (kind === 'break') { Snd.tone([220, 165, 110, 82], 0.25, 'sawtooth', 0.06, 0.07); Snd.tone([880, 660, 880, 660], 0.12, 'square', 0.03, 0.15); }
+    else if (kind === 'clank') { if (st.settings.soundMode === 'all') Snd.tone([1200 + Math.random() * 600], 0.04, 'square', 0.025); }
+    else if (kind === 'win') Snd.tone([523, 659, 784, 1046, 1318, 1568], 0.6, 'triangle', 0.07, 0.12);
+  }
+
+  // ---------------- события логики ----------------
+  function handleEvents(evs, d) {
+    for (const e of evs) {
+      switch (e.type) {
+        case 'board': boardVisual(e.j, e.amount, d); break;
+        case 'eject': ejectVisual(e.j, e.amount, e.omega, d); Snd.tick(); break;
+        case 'fling': flingVisual(e.j, e.amount, e.omega, d); break;
+        case 'breakdown':
+          sfx('break'); buzz([120, 60, 220]);
+          toast('Дверь сломалась! Она почти не крутится — нужен аварийный ремонт.');
+          logEvent('Поломка двери');
+          for (let i = 0; i < 18; i++) V.smoke.push({ x: (Math.random() - 0.5) * 0.4, y: (Math.random() - 0.5) * 0.3, z: d.Hd, vx: (Math.random() - 0.5) * 0.4, vz: 0.4 + Math.random() * 0.6, r: 3 + Math.random() * 5, t: 0, life: 1.5 + Math.random() * 1.5 });
+          break;
+        case 'repairStart':
+          sfx('repair');
+          toast(e.kind === 'emergency' ? `Аварийный ремонт: дверь встанет на ${Math.ceil(e.time)} с` : `Плановый ремонт: дверь встанет на ${Math.ceil(e.time)} с`);
+          logEvent(e.kind === 'emergency' ? 'Начат аварийный ремонт' : 'Начат плановый ремонт');
+          break;
+        case 'repaired': V.repairFlash = 1.5; sfx('fixed'); toast('Дверь снова как новая'); logEvent(e.kind === 'emergency' ? 'Дверь починена после поломки' : 'Плановый ремонт закончен'); break;
+        case 'transport': spawnVehicle(e.id, e.amount, d); break;
+        case 'special': spawnSpecial(e.spec, d); break;
+        case 'blades': resetRiders(); logEvent(`Поставлена ${st.run.blades}-я лопасть`); break;
+        case 'shape': logEvent(`Новые лопасти: ${L.SHAPES[st.run.shape].name.toLowerCase()}`); break;
+        case 'buy':
+          if (e.id === 'motor' && e.from === 0) logEvent('Установлен автопривод');
+          else if (e.id === 'gears' && e.from === 0) logEvent('Поставлены шестерни');
+          else if (L.UP[e.id] && L.UP[e.id].trans && e.from === 0) logEvent(`Открыт транспорт: ${L.UP[e.id].name.toLowerCase()}`);
+          break;
+        case 'stage':
+          logEvent(`Переезд: ${L.STAGES[e.stage].name}`);
+          toast(`Новое здание: ${L.STAGES[e.stage].name}`); sfx('stage');
+          if (curTab) showTab(curTab);
+          break;
+        case 'win': setTimeout(showWin, 600); sfx('win'); break;
+        default: break;
+      }
+    }
+  }
+
+  // ---------------- симуляция кадра ----------------
+  function simulate(dt) {
+    const h = V.hand;
+    if (h.active && performance.now() - h.lastMove > 90) h.omega *= Math.exp(-dt * 10);
+    const input = { hand: h.active, handOmega: h.omega, push: V.push };
+    const evs = [];
+    const n = Math.min(800, Math.max(1, Math.ceil(dt / (1 / 60))));
+    for (let i = 0; i < n; i++) L.step(st, dt / n, input, evs);
+    const d = dims();
+    if (V.riders.length !== st.run.blades) resetRiders();
+    handleEvents(evs, d);
+    return d;
+  }
+
+  function updateVisuals(dt, d) {
+    const D = L.derived(st);
+    updateWeight(dt, d, D);
+    // толпа
+    const target = Math.min(MAXC, Math.round(st.run.Q / V.w));
+    const have = V.crowd.length + V.walkers.length;
+    const ckk = Math.max(0.5, (st.settings.crowd || 1200) / 1200);
+    V.spawnAcc = Math.min(V.spawnAcc + dt * 220 * ckk, 60 * ckk);
+    if (have < target && V.walkers.length < MAXW) {
+      let k = Math.min(target - have, Math.floor(V.spawnAcc), MAXW - V.walkers.length);
+      V.spawnAcc -= k; while (k-- > 0) spawnWalker(d);
+    } else if (have > target + 2) {
+      let ex = Math.min(have - target, 12);
+      while (ex-- > 0) {
+        const p = V.walkers.length ? V.walkers.pop() : V.crowd.pop(); if (!p) break;
+        p.dir = p.x < 0 ? -1 : 1; V.leavers.push(p);
+      }
+    }
+    // идущие к очереди
+    let tail = V.crowd.length;
+    for (let i = V.walkers.length - 1; i >= 0; i--) {
+      const p = V.walkers[i];
+      const [tx, ty] = slotPos(tail + i, d);
+      const dx = tx - p.x, dy = ty - p.y, dist = Math.hypot(dx, dy);
+      if (dist < 0.1) { V.walkers.splice(i, 1); V.crowd.push(p); continue; }
+      const sp = p.spd * dt * (dist > 3 ? 1.5 : 1);
+      p.x += dx / dist * Math.min(sp, dist); p.y += dy / dist * Math.min(sp, dist); p.ph += dt * 11 * p.spd;
+    }
+    // очередь
+    for (let i = 0; i < V.crowd.length; i++) {
+      const p = V.crowd[i]; const [tx, ty] = slotPos(i, d);
+      const dx = tx - p.x, dy = ty - p.y, dist = Math.hypot(dx, dy);
+      if (dist > 0.01) { const sp = Math.min(dist, 1.6 * dt); p.x += dx / dist * sp; p.y += dy / dist * sp; p.ph += dt * 9; }
+    }
+    // уходящие
+    for (let i = V.leavers.length - 1; i >= 0; i--) {
+      const p = V.leavers[i]; p.x += p.dir * 1.1 * dt; p.y += 0.25 * dt; p.ph += dt * 10;
+      if (p.x < edgeL() - 1 || p.x > edgeR() + 1) V.leavers.splice(i, 1);
+    }
+    if (V.leavers.length > 200) V.leavers.splice(0, V.leavers.length - 200);
+    // прохожие — просто идут мимо
+    const nP = Math.min(30, 5 + 3 * d.stage), ry0 = roadY(d);
+    while (V.passers.length < nP) {
+      const far = Math.random() < 0.45, dir = Math.random() < 0.5 ? -1 : 1;
+      V.passers.push({ x: edgeL() + Math.random() * (edgeR() - edgeL()), y: far ? ry0 + (rails() ? 2.1 : 1.45) + Math.random() * 0.08 : ry0 - 0.42 + Math.random() * 0.2, dir, spd: 0.6 + Math.random() * 0.5, ph: Math.random() * TAU });
+    }
+    if (V.passers.length > nP) V.passers.length = nP;
+    for (const p of V.passers) {
+      p.x += p.dir * p.spd * dt; p.ph += dt * 9 * p.spd;
+      if (p.x < edgeL() - 0.5) p.x = edgeR() + 0.3; else if (p.x > edgeR() + 0.5) p.x = edgeL() - 0.3;
+    }
+    // отброшенные: полёт → лежат → встают и снова в очередь
+    for (let i = V.flyers.length - 1; i >= 0; i--) {
+      const p = V.flyers[i]; p.t += dt;
+      if (p.st === 'fly') {
+        p.vz -= 6 * dt; p.z += p.vz * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.spin += dt * 12;
+        if (p.y < d.Rv + 0.15) p.y = d.Rv + 0.15;
+        if (p.z <= 0) { p.z = 0; p.st = 'down'; p.t = 0; p.wait = 0.5 + Math.random() * 0.7; }
+      } else if (p.st === 'down') {
+        if (p.t > p.wait) { V.flyers.splice(i, 1); if (V.walkers.length < MAXW) V.walkers.push({ x: p.x, y: p.y, z: 0, ph: 0, spd: 1.1 + Math.random() * 0.5 }); }
+      }
+    }
+    V.comboT = Math.max(0, V.comboT - dt);
+    V.repairFlash = Math.max(0, V.repairFlash - dt);
+    if (st.run.broken && Math.random() < dt * 4 && V.smoke.length < 80) V.smoke.push({ x: (Math.random() - 0.5) * 0.3, y: (Math.random() - 0.5) * 0.2, z: d.Hd, vx: (Math.random() - 0.5) * 0.2, vz: 0.3 + Math.random() * 0.4, r: 3 + Math.random() * 4, t: 0, life: 2 + Math.random() });
+    for (let i = V.smoke.length - 1; i >= 0; i--) { const m = V.smoke[i]; m.t += dt; m.x += m.vx * dt; m.z += m.vz * dt; m.r += dt * 4; if (m.t > m.life) V.smoke.splice(i, 1); }
+    if (st.run.repairT > 0) { V.clankT -= dt; if (V.clankT <= 0) { V.clankT = 0.35 + Math.random() * 0.3; sfx('clank'); } }
+    // пассажиры дверей
+    for (const comp of V.riders) for (const p of comp) if (p.t < 1) p.t = Math.min(1, p.t + dt * 4);
+    // внутри магазина: долёт → покупки у стеллажа → выход через боковую дверь с пакетом
+    const walkSp = 1.25 + 0.12 * d.Wb, exitY = -d.Db * 0.5;
+    for (let i = V.inside.length - 1; i >= 0; i--) {
+      const p = V.inside[i];
+      p.t += dt;
+      if (p.t > 14) { V.inside.splice(i, 1); continue; }
+      if (p.st === 'fly') {
+        p.vz -= 4.5 * dt; p.z += p.vz * dt;
+        if (p.z < 0) { p.z = 0; p.vz = -p.vz * 0.35; if (p.vz < 0.25) p.vz = 0; }
+        const fr = p.z > 0 ? 0.25 : 2.4;
+        p.vx -= p.vx * fr * dt; p.vy -= p.vy * fr * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+        const xm = d.Wb - 0.08;
+        if (p.x < -xm) { p.x = -xm; p.vx = Math.abs(p.vx) * 0.5; }
+        if (p.x > xm) { p.x = xm; p.vx = -Math.abs(p.vx) * 0.5; }
+        if (p.y < -d.Db + 0.08) { p.y = -d.Db + 0.08; p.vy = Math.abs(p.vy) * 0.5; }
+        if (p.y > -0.05 && Math.hypot(p.x, p.y) > d.Rv * 0.95) { p.y = -0.05; p.vy = -Math.abs(p.vy) * 0.5; }
+        if (p.z === 0 && p.vz === 0 && p.t > 0.3 && Math.hypot(p.vx, p.vy) < 0.4) {
+          p.st = 'shop';
+          p.tx = -d.Wb + 0.35 + Math.random() * (2 * d.Wb - 0.7);
+          p.ty = -d.Db + 0.3 + Math.random() * Math.max(0.2, d.Db - d.Rv - 0.5);
+          p.wait = 0.25 + Math.random() * 0.8;
+        }
+      } else {
+        const dx = p.tx - p.x, dy = p.ty - p.y, dist = Math.hypot(dx, dy);
+        if (dist > 0.04) { const m = Math.min(dist, walkSp * dt); p.x += dx / dist * m; p.y += dy / dist * m; p.ph += dt * 11; }
+        else if (p.st === 'shop') {
+          p.wait -= dt;
+          if (p.wait <= 0) { p.st = 'exit'; p.bag = true; p.side = p.x < 0 ? -1 : 1; p.tx = p.side * (d.Wb - 0.15); p.ty = exitY; }
+        } else if (p.st === 'exit') { p.st = 'out'; p.tx = p.side * (d.Wb + 1.1); p.ty = exitY + (Math.random() - 0.5) * 0.3; }
+        else if (p.st === 'out') { V.inside.splice(i, 1); continue; }
+      }
+    }
+    // всплывающие числа
+    V.ejT += dt;
+    if (V.ejT > 0.8 && V.ejAgg > 0) {
+      V.floats.push({ x: (Math.random() - 0.5) * d.Rv * 0.8, y: -d.Rv * 0.6, z: d.Hd + 0.15, text: '+' + fmt(Math.max(1, Math.round(V.ejAgg)), 0), t: 0, life: 1.4 });
+      V.ejAgg = 0; V.ejT = 0;
+    }
+    for (let i = V.floats.length - 1; i >= 0; i--) { const f = V.floats[i]; f.t += dt; f.z += dt * 0.35; if (f.t > f.life) V.floats.splice(i, 1); }
+    // источники
+    for (let i = V.sources.length - 1; i >= 0; i--) { const s = V.sources[i]; s.t -= dt; if (s.t <= 0 || s.n <= 0) V.sources.splice(i, 1); }
+    V.metroPulse = Math.max(0, V.metroPulse - dt);
+    // транспорт
+    for (let i = V.vehicles.length - 1; i >= 0; i--) {
+      const v = V.vehicles[i]; v.t += dt;
+      if (v.def.kind === 'road' || v.def.kind === 'rail') {
+        if (v.phase === 'in') {
+          const dist = v.stopX - v.x; const sp = Math.max(0.8, Math.min(v.speed, dist * 2.2));
+          v.x += sp * dt; if (dist < 0.03) { v.phase = 'dwell'; v.t = 0; V.sources.push({ x: v.x + v.total / 2, y: v.y - 0.35, spread: v.total * 0.8, n: v.dots, t: 3 }); }
+        } else if (v.phase === 'dwell') { if (v.t > 2.6) { v.phase = 'out'; v.t = 0; } }
+        else { v.x += Math.min(v.speed, 1 + v.t * 4) * dt; if (v.x > edgeR() + 1) V.vehicles.splice(i, 1); }
+      } else if (v.def.kind === 'sky') { if (v.t > 7) V.vehicles.splice(i, 1); }
+      else if (v.def.kind === 'rocket') {
+        if (v.phase === 'down') { v.z = Math.max(0, 9 - v.t * 4.5); if (v.z === 0) { v.phase = 'dwell'; v.t = 0; V.sources.push({ x: v.x - 0.3, y: v.y + 0.2, spread: 0.4, n: v.dots, t: 3 }); } }
+        else if (v.phase === 'dwell') { if (v.t > 2.6) { v.phase = 'up'; v.t = 0; } }
+        else { v.z = v.t * v.t * 3; if (v.z > 14) V.vehicles.splice(i, 1); }
+      }
+    }
+    // особые гости
+    for (let i = V.specials.length - 1; i >= 0; i--) {
+      const s = V.specials[i]; s.t += dt; s.ph += dt * 8;
+      if (s.state === 'walk') { s.x += s.dir * 0.34 * dt; if (s.x < edgeL() - 1 || s.x > edgeR() + 1) V.specials.splice(i, 1); }
+      else {
+        const tx = 0, ty = d.Rv + 0.1; const dx = tx - s.x, dy = ty - s.y, dist = Math.hypot(dx, dy);
+        if (dist < 0.15) { V.specials.splice(i, 1); continue; }
+        s.x += dx / dist * 2.8 * dt; s.y += dy / dist * 2.8 * dt; s.ph += dt * 10;
+      }
+    }
+    return D;
+  }
+
+  // ---------------- рисование ----------------
+  function line(x1, y1, x2, y2) { ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
+  function ell(cx, cy, rx, ry, a0, a1) { ctx.ellipse(cx, cy, Math.max(0.1, rx), Math.max(0.1, ry), 0, a0 == null ? 0 : a0, a1 == null ? TAU : a1); }
+  function personPath(sx, sy, k) {
+    const w = 2.6 * k, b = 5.4 * k, hh = 2.6 * k;
+    ctx.rect(sx - w / 2, sy - b, w, b - 0.6);
+    ctx.rect(sx - w / 2, sy - b - hh - 0.8, w, hh);
+  }
+  function drawPeople(list, k, opt) {
+    if (!list.length) return;
+    ctx.beginPath();
+    let flags = null;
+    for (const p of list) {
+      const sx = px(p.x), sy = py(p.y, p.z || 0) + ((Math.sin(p.ph || 0) > 0) ? 1 : 0);
+      if (sx < -20 || sx > W + 20 || sy < -40 || sy > H + 20) continue;
+      personPath(sx, sy, k);
+      if (p.bag) ctx.rect(sx + 1.6 * k, sy - 3.6 * k, 2.6 * k, 2.6 * k);
+      if (p.flag) (flags || (flags = [])).push([sx, sy]);
+    }
+    ctx.fill();
+    if (flags) {
+      ctx.beginPath();
+      for (const [sx, sy] of flags) { line(sx + 1.6 * k, sy - 4 * k, sx + 1.6 * k, sy - 15 * k); ctx.rect(sx + 1.6 * k, sy - 15 * k, 6 * k, 3.6 * k); }
+      ctx.stroke(); ctx.fill();
+    }
+  }
+  function box(x0, x1, yc, dep, z0, h, fill) {
+    const X = px(x0), w = (x1 - x0) * cam.s;
+    const yTop = py(yc - dep / 2, z0 + h), topH = dep * cam.s * K;
+    const yFront = py(yc + dep / 2, z0 + h), fH = h * cam.s;
+    ctx.fillStyle = fill || C.paper;
+    ctx.fillRect(X, yTop, w, topH + fH);
+    ctx.strokeRect(X, yTop, w, topH); ctx.strokeRect(X, yFront, w, fH);
+    return { X, w, yFront, fH, yTop };
+  }
+
+  function drawGround(d) {
+    const s = cam.s;
+    // пол магазина
+    const fx = px(-d.Wb), fw = d.Wb * 2 * s, fy = py(-d.Db), fh = d.Db * s * K;
+    ctx.fillStyle = PAT.dots; ctx.fillRect(fx, fy, fw, fh);
+    ctx.strokeStyle = C.rule; ctx.lineWidth = 1; ctx.beginPath();
+    for (let x = Math.ceil(-d.Wb); x <= d.Wb; x++) line(px(x), fy, px(x), fy + fh);
+    for (let y = -Math.floor(d.Db); y < 0; y++) line(fx, py(y), fx + fw, py(y));
+    ctx.stroke();
+    // дорога
+    const ry = roadY(d);
+    const r0 = py(ry - 0.15), r1 = py(ry + 1.25);
+    ctx.fillStyle = PAT.road; ctx.fillRect(0, r0, W, r1 - r0);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); line(0, r0, W, r0); line(0, r1, W, r1); ctx.stroke();
+    ctx.strokeStyle = C.ink2; ctx.lineWidth = 1; ctx.setLineDash([10, 10]); ctx.beginPath(); line(0, (r0 + r1) / 2, W, (r0 + r1) / 2); ctx.stroke(); ctx.setLineDash([]);
+    // зебра
+    ctx.fillStyle = C.ink; ctx.globalAlpha = 0.18;
+    for (let i = 0; i < 7; i++) { const x = px(-0.9 + i * 0.28); ctx.fillRect(x, r0 + 3, 0.14 * s, r1 - r0 - 6); }
+    ctx.globalAlpha = 1;
+    // рельсы
+    if (rails()) {
+      const ra = py(ry + 1.45), rb = py(ry + 1.7);
+      ctx.strokeStyle = C.ink2; ctx.beginPath();
+      for (let x = 0; x < W; x += 9) line(x, ra - 2, x, rb + 2);
+      ctx.stroke();
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); line(0, ra, W, ra); line(0, rb, W, rb); ctx.stroke();
+    }
+    // тротуар у фасада
+    ctx.strokeStyle = C.rule; ctx.lineWidth = 1; ctx.beginPath(); line(0, py(0.02), W, py(0.02)); ctx.stroke();
+    // пол двери
+    ctx.beginPath(); ell(px(0), py(0), d.Rv * s, d.Rv * s * K); ctx.fillStyle = C.paper; ctx.fill(); ctx.fillStyle = PAT.dense; ctx.globalAlpha = 0.35; ctx.fill(); ctx.globalAlpha = 1;
+  }
+
+  function rand(i) { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+  function drawSkyline(d) {
+    if (d.stage < 2) return;
+    const s = cam.s, baseY = py(-d.Db - 0.6);
+    const n = 6 + d.stage * 3;
+    ctx.lineWidth = 1; ctx.strokeStyle = C.rule;
+    for (let i = 0; i < n; i++) {
+      const x = -d.Wb - 4 + (i / (n - 1)) * (d.Wb * 2 + 8);
+      const bw = 0.5 + rand(i) * 0.9, bh = (0.6 + rand(i + 50) * 1.4) * (0.6 + d.stage * 0.25);
+      const X = px(x - bw / 2), Y = baseY - bh * s;
+      ctx.fillStyle = C.paper; ctx.fillRect(X, Y, bw * s, bh * s);
+      ctx.fillStyle = PAT.dots; ctx.fillRect(X, Y, bw * s, bh * s);
+      ctx.strokeRect(X, Y, bw * s, bh * s);
+    }
+  }
+  function drawStore(d) {
+    const s = cam.s, st_ = d.stage;
+    ctx.lineWidth = 1.5; ctx.strokeStyle = C.ink;
+    // задняя стена-фасад
+    const X = px(-d.Wb), w = d.Wb * 2 * s, yb = py(-d.Db), top = py(-d.Db, d.Hb);
+    // башня для высоких этапов
+    if (st_ >= 5) {
+      const tw = d.Wb * (st_ >= 7 ? 0.9 : 0.6), th = 1.6 + (st_ - 4) * 1.4;
+      const tX = px(-tw / 2), tTop = top - th * s;
+      ctx.fillStyle = C.paper; ctx.fillRect(tX, tTop, tw * s, th * s);
+      ctx.strokeRect(tX, tTop, tw * s, th * s);
+      ctx.strokeStyle = C.rule; ctx.lineWidth = 1; ctx.beginPath();
+      for (let yy = tTop + 10; yy < top - 4; yy += 9) line(tX + 6, yy, tX + tw * s - 6, yy);
+      ctx.stroke(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+      if (st_ >= 8) { ctx.beginPath(); line(px(0), tTop, px(0), tTop - 0.9 * s); ctx.stroke(); ctx.beginPath(); ell(px(0), tTop - 0.9 * s, 4, 4); ctx.fillStyle = C.ink; ctx.fill(); }
+    }
+    ctx.fillStyle = C.paper; ctx.fillRect(X, top, w, yb - top);
+    ctx.strokeRect(X, top, w, yb - top);
+    // окна
+    ctx.strokeStyle = C.rule; ctx.lineWidth = 1;
+    const rowsN = Math.max(0, Math.floor((yb - top) / (0.42 * s)) - 1);
+    const colsN = Math.max(2, Math.floor(w / (0.5 * s)));
+    for (let r = 0; r < rowsN; r++) for (let c = 0; c < colsN; c++) {
+      const wx = X + (c + 0.25) * (w / colsN), wy = top + (r + 1.25) * 0.42 * s;
+      if (wy + 0.2 * s > yb - 0.12 * s) continue;
+      ctx.strokeRect(wx, wy, (w / colsN) * 0.5, 0.18 * s);
+    }
+    // вывеска
+    const sign = L.STAGES[st_].sign;
+    const fs = Math.max(10, Math.min(0.3 * s, w / (sign.length * 0.9)));
+    ctx.font = `700 ${fs}px Unbounded, "Arial Black", sans-serif`;
+    const tw = ctx.measureText(sign).width + fs * 1.2, sx = px(0) - tw / 2, sy = top + 6;
+    ctx.fillStyle = C.ink; ctx.fillRect(sx, sy, tw, fs * 1.6);
+    ctx.fillStyle = C.paper; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(sign, px(0), sy + fs * 0.82);
+    // боковые стены (в разрезе)
+    const ey = -d.Db * 0.5, gap = 0.26;
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.beginPath();
+    for (const sd of [-1, 1]) { line(px(sd * d.Wb), py(-d.Db), px(sd * d.Wb), py(ey - gap)); line(px(sd * d.Wb), py(ey + gap), px(sd * d.Wb), py(0)); }
+    ctx.stroke(); ctx.lineWidth = 1.5;
+    ctx.font = '700 8px Unbounded, "Arial Black", sans-serif'; ctx.textBaseline = 'middle';
+    for (const sd of [-1, 1]) {
+      const tx = px(sd * d.Wb) + sd * 6, ty = py(ey - gap) - 12;
+      const tw = ctx.measureText('ВЫХОД').width + 8;
+      ctx.fillStyle = C.ink; ctx.fillRect(sd > 0 ? tx : tx - tw, ty - 6, tw, 12);
+      ctx.fillStyle = C.paper; ctx.textAlign = sd > 0 ? 'left' : 'right'; ctx.fillText('ВЫХОД', tx + sd * 4, ty + 0.5);
+    }
+    // стеллажи
+    const rows = Math.min(4, 1 + st_);
+    for (let r = 0; r < rows; r++) {
+      const y = -d.Db + 0.55 + r * ((d.Db - d.Rv - 0.4) / Math.max(1, rows)) ;
+      if (y > -d.Rv - 0.25) continue;
+      const nS = Math.max(2, Math.floor(d.Wb * 1.3));
+      for (let c = 0; c < nS; c++) {
+        const x0 = -d.Wb + 0.3 + c * ((d.Wb * 2 - 0.6) / nS), x1 = x0 + ((d.Wb * 2 - 0.6) / nS) * 0.72;
+        box(x0, x1, y, 0.22, 0, 0.2, C.paper);
+      }
+    }
+  }
+  function drawInside(d) {
+    if (!V.inside.length) return;
+    const k = personScale();
+    ctx.fillStyle = C.ink; ctx.globalAlpha = 0.2; ctx.beginPath();
+    for (const p of V.inside) if (p.z > 0.05) ctx.rect(px(p.x) - 2, py(p.y) - 1, 4, 2);
+    ctx.fill();
+    const near = [], far = [];
+    for (const p of V.inside) (p.st === 'out' && Math.abs(p.x) > d.Wb + 0.4 ? far : near).push(p);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1;
+    ctx.globalAlpha = 1; drawPeople(near, k);
+    ctx.globalAlpha = 0.4; drawPeople(far, k);
+    ctx.globalAlpha = 1;
+  }
+  function drawFacade(d) {
+    const s = cam.s;
+    ctx.lineWidth = 1.5; ctx.strokeStyle = C.ink;
+    for (const [a, b] of [[-d.Wb, -d.Rv - 0.04], [d.Rv + 0.04, d.Wb]]) {
+      if (b <= a) continue;
+      const X = px(a), w = (b - a) * s, yT = py(0, d.Hw), yB = py(0);
+      ctx.fillStyle = C.paper; ctx.fillRect(X, yT - 0.12 * s * K, w, yB - yT + 0.12 * s * K);
+      ctx.fillStyle = PAT.hatch; ctx.fillRect(X, yT, w, yB - yT);
+      ctx.strokeRect(X, yT, w, yB - yT);
+      ctx.fillStyle = C.ink; ctx.fillRect(X, yT - 0.12 * s * K, w, 0.12 * s * K);
+    }
+  }
+
+  function drawDoor(d, D) {
+    const s = cam.s, r = st.run, B = r.blades, seg = TAU / B, Rv = d.Rv, Hd = d.Hd;
+    const cx = px(0), cy0 = py(0), cyT = py(0, Hd), rx = Rv * s, ry = Rv * s * K;
+    // задняя часть стекла
+    ctx.lineWidth = 1.5; ctx.strokeStyle = C.ink;
+    ctx.beginPath(); ell(cx, cyT, rx, ry, Math.PI, TAU); ctx.stroke();
+    ctx.strokeStyle = C.rule; ctx.lineWidth = 1; ctx.beginPath(); ell(cx, cy0, rx, ry, Math.PI, TAU); ctx.stroke();
+    // элементы с сортировкой по глубине
+    const items = [];
+    for (let k = 0; k < B; k++) { const a = r.theta + k * seg; items.push({ t: 0, k, a, depth: Math.sin(a + bend(0.6)) * 0.5 }); }
+    for (let j = 0; j < B; j++) { const a = r.theta + (j + 0.5) * seg + bend(0.55); items.push({ t: 1, j, depth: Math.sin(a) * 0.55 }); }
+    items.sort((a, b) => a.depth - b.depth);
+    const k = personScale();
+    const speed = Math.abs(r.omega);
+    const ghosts = reduceMotion ? 0 : speed > 2.5 ? (speed > 9 ? 3 : 2) : 0;
+    for (const it of items) {
+      if (it.t === 0) {
+        if (r.broken && it.k === 0) { drawBlade(it.a, d, 1, 0.55); continue; }
+        for (let g = ghosts; g >= 0; g--) {
+          const off = -Math.sign(r.omega) * g * Math.min(0.22, speed * 0.012);
+          drawBlade(it.a + off, d, g === 0 ? 1 : 0.18 / g);
+        }
+      } else {
+        const list = V.riders[it.j]; if (!list || !list.length) continue;
+        ctx.beginPath();
+        for (const p of list) {
+          const [sx2, sy2] = seatXY(it.j, p, d);
+          const e = p.t < 1 ? 1 - Math.pow(1 - p.t, 3) : 1;
+          const x = p.x0 + (sx2 - p.x0) * e, y = p.y0 + (sy2 - p.y0) * e;
+          personPath(px(x), py(y), k);
+        }
+        ctx.fillStyle = C.ink; ctx.fill();
+      }
+    }
+    // передняя часть стекла и козырёк
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ell(cx, cyT, rx, ry, 0, Math.PI); ctx.stroke();
+    ctx.beginPath(); ell(cx, cy0, rx, ry, 0, Math.PI); ctx.stroke();
+    ctx.beginPath(); line(cx - rx, cy0, cx - rx, cyT); line(cx + rx, cy0, cx + rx, cyT); ctx.stroke();
+    ctx.lineWidth = 3; ctx.beginPath(); ell(cx, cyT - 0.05 * s, rx * 1.02, ry * 1.02, Math.PI * 1.08, Math.PI * 1.92); ctx.stroke();
+    // механизм на оси: маховик (заряд), шестерня, автопривод
+    drawHub(cx, cyT, s, r, D);
+    // кольца скорости
+    if (speed > 3 && !reduceMotion) {
+      ctx.globalAlpha = Math.min(0.5, (speed - 3) * 0.03); ctx.lineWidth = 1;
+      for (let i = 0; i < 3; i++) {
+        const a0 = r.theta * (1 + i * 0.13) + i * 2;
+        ctx.beginPath(); ell(cx, py(0, Hd * (0.3 + i * 0.25)), rx * (1.08 + i * 0.05), ry * (1.08 + i * 0.05), a0, a0 + 1.4 + Math.min(2, speed * 0.05)); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+  function drawHub(cx, cy, s, r, D) {
+    const lv = r.lv, k = Math.max(0.7, Math.min(1.4, s / 90));
+    // маховик — диск с заливкой по запасу энергии
+    const fr = (10 + lv.fly * 0.8) * k, frac = D.flyCap ? Math.min(1, r.E / D.flyCap) : 0;
+    ctx.fillStyle = C.paper; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ell(cx, cy - 3 * k, fr, fr * K); ctx.fill(); ctx.stroke();
+    if (frac > 0.01) {
+      ctx.beginPath(); ctx.moveTo(cx, cy - 3 * k);
+      ctx.ellipse(cx, cy - 3 * k, fr - 2, (fr - 2) * K, 0, r.theta, r.theta + frac * TAU); ctx.closePath();
+      ctx.fillStyle = C.ink; ctx.globalAlpha = 0.75; ctx.fill(); ctx.globalAlpha = 1;
+    }
+    // шестерня
+    if (lv.gears > 0) {
+      const gx = cx - fr - 7 * k, gy = cy - 6 * k, gr = (5 + lv.gears * 0.4) * k, teeth = 8;
+      ctx.beginPath();
+      for (let i = 0; i <= teeth * 2; i++) {
+        const a = -r.theta * 2 + i * Math.PI / teeth, rr = i % 2 ? gr : gr * 1.35;
+        const X = gx + Math.cos(a) * rr, Y = gy + Math.sin(a) * rr * K;
+        i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+      }
+      ctx.closePath(); ctx.fillStyle = C.paper; ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ell(gx, gy, 1.6 * k, 1.1 * k); ctx.fillStyle = C.ink; ctx.fill();
+    }
+    // автопривод — короб с мотором
+    if (lv.motor > 0) {
+      const mx = cx + fr + 4 * k, my = cy - 12 * k, mw = (10 + lv.motor * 0.5) * k, mh = 9 * k;
+      ctx.fillStyle = C.paper; ctx.fillRect(mx, my, mw, mh); ctx.strokeRect(mx, my, mw, mh);
+      ctx.beginPath(); for (let i = 1; i < 4; i++) line(mx + i * mw / 4, my + 2, mx + i * mw / 4, my + mh - 2); ctx.lineWidth = 1; ctx.stroke(); ctx.lineWidth = 1.5;
+      if (r.driver === 'motor') { ctx.fillStyle = C.ink; ctx.fillRect(mx + mw - 3 * k, my - 3 * k, 3 * k, 3 * k); }
+    }
+    ctx.beginPath(); ell(cx, cy - 3 * k, 3, 2); ctx.fillStyle = C.ink; ctx.fill();
+  }
+  function drawBlade(a, d, alpha, broke) {
+    const s = cam.s, Rv = d.Rv, Hd = d.Hd, N = 9;
+    const bot = [], top = [];
+    for (let i = 0; i <= N; i++) {
+      const rn = 0.05 + 0.95 * i / N, ang = a + bend(rn) + (broke ? broke * rn * rn : 0);
+      const x = Math.cos(ang) * rn * Rv, y = Math.sin(ang) * rn * Rv;
+      const sag = broke ? rn * rn * 0.6 : 0;
+      bot.push([px(x), py(y, 0)]); top.push([px(x), py(y, Hd * (1 - sag))]);
+    }
+    ctx.globalAlpha = alpha;
+    ctx.beginPath(); ctx.moveTo(bot[0][0], bot[0][1]);
+    for (const p of bot) ctx.lineTo(p[0], p[1]);
+    for (let i = top.length - 1; i >= 0; i--) ctx.lineTo(top[i][0], top[i][1]);
+    ctx.closePath();
+    if (alpha >= 1) { ctx.fillStyle = C.paper; ctx.globalAlpha = 0.72; ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.strokeStyle = C.ink; ctx.lineWidth = alpha >= 1 ? 1.4 : 1;
+    ctx.beginPath(); ctx.moveTo(top[0][0], top[0][1]); for (const p of top) ctx.lineTo(p[0], p[1]);
+    ctx.lineTo(bot[N][0], bot[N][1]); ctx.stroke();
+    if (alpha >= 1) {
+      ctx.lineWidth = 1; ctx.strokeStyle = C.ink2; ctx.beginPath(); ctx.moveTo(bot[0][0], bot[0][1]); for (const p of bot) ctx.lineTo(p[0], p[1]); ctx.stroke();
+      if (st.run.shape >= 6) { ctx.strokeStyle = C.ink; ctx.beginPath(); const m = Math.floor(N / 2); ctx.moveTo(top[0][0], (top[0][1] + bot[0][1]) / 2); for (let i = 0; i <= N; i++) ctx.lineTo(top[i][0], (top[i][1] + bot[i][1]) / 2); ctx.stroke(); void m; }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ограждение очереди и табличка «ВХОД» над дверью
+  function drawEntrance(d) {
+    const s = cam.s, k = personScale();
+    if (d.stage >= 1) {
+      ctx.strokeStyle = C.ink2; ctx.lineWidth = 1;
+      for (const sd of [-1, 1]) {
+        const pts = [[sd * 0.42, d.Rv + 0.12], [sd * 0.85, d.Rv + 0.65], [sd * 1.28, d.Rv + 1.18]];
+        ctx.beginPath();
+        for (let i = 0; i < pts.length; i++) { const [x, y] = pts[i]; const X = px(x), Y = py(y); line(X, Y, X, Y - 9 * k); }
+        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(px(pts[0][0]), py(pts[0][1]) - 8 * k);
+        for (const [x, y] of pts) ctx.lineTo(px(x), py(y) - 8 * k);
+        ctx.stroke();
+      }
+    }
+    const X = px(0), Y = py(d.Rv, d.Hd + 0.16);
+    ctx.font = '700 9px Unbounded, "Arial Black", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText('ВХОД').width + 12;
+    ctx.fillStyle = C.ink; ctx.fillRect(X - tw / 2, Y - 8, tw, 16);
+    ctx.fillStyle = C.paper; ctx.fillText('ВХОД', X, Y + 0.5);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.beginPath(); line(X, Y + 8, X, py(d.Rv, d.Hd)); ctx.stroke();
+    void s;
+  }
+  // фонари на ближнем тротуаре
+  function drawLamps(d) {
+    const ry = roadY(d), y = ry - 0.22, s = cam.s;
+    ctx.strokeStyle = C.ink2; ctx.fillStyle = C.ink2; ctx.lineWidth = 1.5;
+    const x0 = Math.floor(edgeL() / 3.4) * 3.4 + 1.7;
+    for (let x = x0; x < edgeR(); x += 3.4) {
+      if (Math.abs(x) < 1.6 || Math.abs(x - busStopX(d)) < 0.6 || (st.run.lv.metro > 0 && Math.abs(x - metroPos(d)[0]) < 0.8)) continue;
+      const X = px(x), Yb = py(y), Yt = py(y, 0.95);
+      ctx.beginPath(); line(X, Yb, X, Yt); line(X, Yt, X + 0.16 * s, Yt); ctx.stroke();
+      ctx.fillRect(X + 0.12 * s, Yt, 0.1 * s, 3);
+    }
+  }
+  // деревья на дальнем тротуаре
+  function drawTrees(d) {
+    const s = cam.s, y = roadY(d) + (rails() ? 2.45 : 1.8);
+    const x0 = Math.floor(edgeL() / 4.1) * 4.1 + 0.9;
+    ctx.lineWidth = 1.5; ctx.strokeStyle = C.ink;
+    for (let x = x0, i = 0; x < edgeR(); x += 4.1, i++) {
+      const X = px(x), Yb = py(y), r = (0.2 + rand(i + 9) * 0.06) * s;
+      ctx.beginPath(); line(X, Yb, X, Yb - 0.26 * s); ctx.stroke();
+      ctx.beginPath(); ell(X, Yb - 0.26 * s - r * 0.8, r, r * 0.85); ctx.fillStyle = C.paper; ctx.fill(); ctx.fillStyle = PAT.hatch; ctx.fill(); ctx.stroke();
+    }
+  }
+  function drawStreetProps(d) {
+    const s = cam.s, ry = roadY(d);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+    if (st.run.stage >= 1) { // остановка
+      const x = busStopX(d), X = px(x), Y = py(ry - 0.35);
+      ctx.beginPath(); line(X, Y, X, Y - 0.75 * s); line(X + 0.25 * s, Y, X + 0.25 * s, Y - 0.5 * s); line(X + 1.1 * s, Y, X + 1.1 * s, Y - 0.5 * s); ctx.stroke();
+      ctx.fillStyle = C.ink2; ctx.fillRect(X + 0.2 * s, Y - 0.55 * s, 0.95 * s, 4);
+      ctx.strokeRect(X + 0.4 * s, Y - 0.16 * s, 0.55 * s, 0.1 * s);
+      ctx.fillStyle = C.ink; ctx.fillRect(X - 7, Y - 0.75 * s - 14, 14, 14);
+      ctx.fillStyle = C.paper; ctx.font = '700 9px Unbounded, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('А', X, Y - 0.75 * s - 7);
+    }
+    if (st.run.lv.metro > 0) {
+      const [mx, my] = metroPos(d);
+      const b = box(mx - 0.45, mx + 0.45, my, 0.4, 0, 0.42, C.paper);
+      ctx.fillStyle = C.ink; ctx.font = `900 ${Math.max(9, 0.22 * s)}px Unbounded, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('М', b.X + b.w / 2, b.yFront + b.fH / 2);
+      if (V.metroPulse > 0) { ctx.globalAlpha = V.metroPulse / 1.6; ctx.beginPath(); ell(px(mx), py(my + 0.3), (0.6 + (1.6 - V.metroPulse)) * s, (0.6 + (1.6 - V.metroPulse)) * s * K); ctx.stroke(); ctx.globalAlpha = 1; }
+    }
+  }
+  function drawVehicles(d, sky) {
+    const s = cam.s;
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+    for (const v of V.vehicles) {
+      const def = v.def;
+      if ((def.kind === 'sky') !== sky) continue;
+      if (def.kind === 'road') {
+        const b = box(v.x, v.x + def.len, v.y, def.dep, 0.08, def.h, C.paper);
+        ctx.strokeStyle = C.ink;
+        const nw = Math.floor(def.len / 0.38);
+        for (let i = 0; i < nw; i++) ctx.strokeRect(b.X + 6 + i * (b.w - 12) / nw, b.yFront + 4, (b.w - 12) / nw - 4, b.fH * 0.38);
+        ctx.fillStyle = C.ink;
+        ctx.beginPath(); ell(px(v.x + 0.35), py(v.y + def.dep / 2, 0.08), 0.09 * s, 0.09 * s); ell(px(v.x + def.len - 0.35), py(v.y + def.dep / 2, 0.08), 0.09 * s, 0.09 * s); ctx.fill();
+        ctx.font = `700 ${Math.max(8, 0.15 * s)}px Unbounded, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(def.label, b.X + b.w - 12, b.yFront + b.fH * 0.72);
+        if (def.pant) { ctx.beginPath(); line(px(v.x + def.len / 2), b.yTop, px(v.x + def.len / 2 + 0.3), py(v.y, 1.05)); line(px(v.x + def.len / 2 + 0.3), py(v.y, 1.05), px(v.x + def.len / 2 + 0.6), b.yTop); ctx.stroke(); }
+      } else if (def.kind === 'rail') {
+        for (let c = 0; c < def.cars; c++) {
+          const x0 = v.x + c * (def.len + 0.12);
+          const b = box(x0, x0 + def.len, v.y, def.dep, 0.05, def.h, C.paper);
+          ctx.fillStyle = PAT.hatch; ctx.fillRect(b.X, b.yFront + b.fH * 0.62, b.w, b.fH * 0.38);
+          ctx.strokeStyle = C.ink;
+          for (let i = 0; i < 3; i++) ctx.strokeRect(b.X + 5 + i * (b.w - 10) / 3, b.yFront + 4, (b.w - 10) / 3 - 4, b.fH * 0.35);
+        }
+      } else if (def.kind === 'sky') {
+        const p = v.t / 7, dir = v.dir;
+        const X = dir > 0 ? cam.view.left - 80 + p * (cam.view.right - cam.view.left + 160) : cam.view.right + 80 - p * (cam.view.right - cam.view.left + 160);
+        const Y = cam.view.top + 10 + Math.sin(p * Math.PI) * 12;
+        ctx.save(); ctx.translate(X, Y); ctx.scale(dir, 1);
+        ctx.fillStyle = C.paper; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+        if (def.shape === 'plane') {
+          ctx.beginPath(); ell(0, 0, 34, 6); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(-14, 16); ctx.lineTo(-6, 16); ctx.lineTo(8, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(-28, -2); ctx.lineTo(-34, -13); ctx.lineTo(-27, -13); ctx.lineTo(-20, -3); ctx.closePath(); ctx.fill(); ctx.stroke();
+        } else {
+          ctx.beginPath(); ell(0, 0, 52, 15); ctx.fill(); ctx.fillStyle = PAT.dots; ctx.fill(); ctx.stroke();
+          ctx.fillStyle = C.paper; ctx.fillRect(-12, 15, 24, 7); ctx.strokeRect(-12, 15, 24, 7);
+          ctx.beginPath(); ctx.moveTo(-46, -4); ctx.lineTo(-60, -14); ctx.lineTo(-60, 14); ctx.lineTo(-46, 4); ctx.stroke();
+        }
+        ctx.restore();
+      } else if (def.kind === 'rocket') {
+        const X = px(v.x), Yg = py(v.y), Y = Yg - v.z * s;
+        ctx.fillStyle = C.ink; ctx.globalAlpha = 0.2; ctx.beginPath(); ell(X, Yg, 0.4 * s, 0.4 * s * K); ctx.fill(); ctx.globalAlpha = 1;
+        ctx.fillStyle = C.paper;
+        ctx.beginPath(); ctx.moveTo(X - 0.18 * s, Y); ctx.lineTo(X - 0.18 * s, Y - 0.8 * s); ctx.quadraticCurveTo(X, Y - 1.25 * s, X + 0.18 * s, Y - 0.8 * s); ctx.lineTo(X + 0.18 * s, Y); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(X - 0.18 * s, Y - 0.2 * s); ctx.lineTo(X - 0.34 * s, Y); ctx.lineTo(X - 0.18 * s, Y); ctx.moveTo(X + 0.18 * s, Y - 0.2 * s); ctx.lineTo(X + 0.34 * s, Y); ctx.lineTo(X + 0.18 * s, Y); ctx.stroke();
+        if (v.phase !== 'dwell') { ctx.fillStyle = C.ink; ctx.beginPath(); ctx.moveTo(X - 0.12 * s, Y); ctx.lineTo(X, Y + (0.4 + Math.random() * 0.3) * s); ctx.lineTo(X + 0.12 * s, Y); ctx.fill(); }
+      }
+    }
+
+  }
+  function drawSpecials() {
+    const k = personScale() * 1.55;
+    for (const s of V.specials) {
+      const X = px(s.x), Y = py(s.y) + (Math.sin(s.ph) > 0 ? 1 : 0);
+      const hov = V.hover === s;
+      if (s.state === 'walk') {
+        const pr = 10 + 4 * Math.sin(s.t * 5);
+        ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.beginPath(); ell(X, Y, pr, pr * K); ctx.stroke();
+      }
+      ctx.fillStyle = C.ink; ctx.beginPath();
+      if (s.spec.id === 'robot') { ctx.rect(X - 4 * k, Y - 7 * k, 8 * k, 6.4 * k); ctx.rect(X - 2.6 * k, Y - 11 * k, 5.2 * k, 3.4 * k); ctx.rect(X - 0.4 * k, Y - 13.5 * k, 0.8 * k, 2.5 * k); }
+      else personPath(X, Y, k);
+      ctx.fill();
+      if (s.spec.id === 'courier') { ctx.fillStyle = C.paper; ctx.fillRect(X + 1.8 * k, Y - 6 * k, 5 * k, 4 * k); ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.strokeRect(X + 1.8 * k, Y - 6 * k, 5 * k, 4 * k); }
+      if (s.state === 'walk') {
+        ctx.font = '700 9px Unbounded, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const tw = ctx.measureText(s.spec.tag).width + 12, ty = Y - 34;
+        ctx.fillStyle = hov ? C.paper : C.ink; ctx.fillRect(X - tw / 2, ty - 8, tw, 16);
+        ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.strokeRect(X - tw / 2, ty - 8, tw, 16);
+        ctx.fillStyle = hov ? C.ink : C.paper; ctx.fillText(s.spec.tag, X, ty + 0.5);
+        ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.beginPath(); line(X, ty + 8, X, Y - 16); ctx.stroke();
+        if (hov || isMobile()) {
+          const h = L.SPECIAL_HINT[s.spec.id] || '';
+          ctx.font = '500 11px "Golos Text", sans-serif';
+          const hw = ctx.measureText(h).width + 14, hx = Math.max(8, Math.min(W - hw - 8, X - hw / 2)), hy = ty - 34;
+          ctx.fillStyle = C.paper; ctx.fillRect(hx, hy, hw, 20); ctx.strokeStyle = C.ink; ctx.strokeRect(hx, hy, hw, 20);
+          ctx.fillStyle = C.ink; ctx.textAlign = 'left'; ctx.fillText(h, hx + 7, hy + 10.5);
+        }
+      }
+    }
+  }
+  function drawFloats() {
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const f of V.floats) {
+      ctx.globalAlpha = Math.max(0, 1 - f.t / f.life);
+      ctx.font = f.big ? '700 12px Unbounded, sans-serif' : '600 12px "IBM Plex Mono", monospace';
+      ctx.fillStyle = C.ink; ctx.fillText(f.text, px(f.x), py(f.y, f.z));
+    }
+    ctx.globalAlpha = 1;
+  }
+  function drawIncident(d) {
+    const r = st.run; if (!r.broken && r.repairT <= 0 && !V.smoke.length) return;
+    const s = cam.s, cx = px(0), cy0 = py(0), rx = d.Rv * s * 1.18, ry = d.Rv * s * K * 1.18;
+    if (r.broken || r.repairT > 0) {
+      // заградительная лента
+      ctx.lineWidth = 5; ctx.setLineDash([10, 8]); ctx.lineDashOffset = -st.life.time * 10;
+      ctx.strokeStyle = C.ink; ctx.beginPath(); ell(cx, cy0, rx, ry, 0, Math.PI); ctx.stroke();
+      ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.lineWidth = 1;
+    }
+    if (r.repairT > 0) {
+      // конусы и ремонтники
+      for (const a of [0.35, 1.2, 1.95, 2.8]) {
+        const X = cx + Math.cos(a) * rx, Y = cy0 + Math.sin(a) * ry;
+        ctx.fillStyle = C.paper; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(X - 5, Y); ctx.lineTo(X, Y - 12); ctx.lineTo(X + 5, Y); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = C.ink; ctx.fillRect(X - 3, Y - 6, 6, 2);
+      }
+      const k = personScale() * 1.3;
+      for (const [wx, sgn] of [[-0.55, 1], [0.6, -1]]) {
+        const X = px(wx * d.Rv), Y = py(d.Rv * 0.55), sw = Math.sin(st.life.time * 9 + wx * 5);
+        ctx.fillStyle = C.ink; ctx.beginPath(); personPath(X, Y, k); ctx.fill();
+        ctx.fillRect(X - 3 * k, Y - 10.5 * k, 6 * k, 1.6 * k);                    // каска
+        ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath();
+        line(X + sgn * 1.5 * k, Y - 4 * k, X + sgn * (5 + sw * 2) * k, Y - (7 + sw * 2) * k); ctx.stroke();  // ключ
+      }
+      // табличка с прогрессом
+      const prog = 1 - r.repairT / Math.max(0.01, r.repairTotal);
+      const X = Math.max(70, cx - rx * 1.05), Y = py(d.Rv * 0.35, d.Hd + 0.45);
+      ctx.font = '700 10px Unbounded, "Arial Black", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const txt = `${r.repairKind === 'emergency' ? 'АВАРИЙНЫЙ РЕМОНТ' : 'РЕМОНТ'} · ${Math.ceil(r.repairT)} С`, tw = ctx.measureText(txt).width + 16;
+      ctx.fillStyle = C.paper; ctx.fillRect(X - tw / 2, Y - 11, tw, 26); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.strokeRect(X - tw / 2, Y - 11, tw, 26);
+      ctx.fillStyle = C.ink; ctx.fillText(txt, X, Y - 2);
+      ctx.fillRect(X - tw / 2 + 4, Y + 8, (tw - 8) * prog, 4);
+    } else if (r.broken) {
+      const X = Math.max(60, cx - rx * 1.05) + Math.sin(st.life.time * 23) * 1.5, Y = py(d.Rv * 0.35, d.Hd + 0.45);
+      ctx.font = '900 13px Unbounded, "Arial Black", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const txt = 'АВАРИЯ', tw = ctx.measureText(txt).width + 18;
+      ctx.fillStyle = C.ink; ctx.fillRect(X - tw / 2, Y - 13, tw, 26);
+      ctx.fillStyle = C.paper; ctx.fillText(txt, X, Y + 1);
+      ctx.font = '600 10px "Golos Text", sans-serif'; ctx.fillStyle = C.ink;
+      ctx.fillText('дверь заклинило · нужен ремонт', X, Y + 24);
+    }
+    // дым
+    for (const m of V.smoke) {
+      ctx.globalAlpha = Math.max(0, 0.45 * (1 - m.t / m.life));
+      ctx.fillStyle = C.ink2; ctx.beginPath(); ctx.arc(px(m.x), py(m.y, m.z), m.r, 0, TAU); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function drawFlyers(d) {
+    if (!V.flyers.length) return;
+    const k = personScale();
+    ctx.fillStyle = C.ink; ctx.globalAlpha = 0.2; ctx.beginPath();
+    for (const p of V.flyers) if (p.st === 'fly') ctx.rect(px(p.x) - 2, py(p.y) - 1, 4, 2);
+    ctx.fill(); ctx.globalAlpha = 1;
+    for (const p of V.flyers) {
+      const X = px(p.x), Y = py(p.y, p.z);
+      ctx.save(); ctx.translate(X, Y - 4 * k);
+      ctx.rotate(p.st === 'fly' ? p.spin : Math.PI / 2);
+      ctx.fillRect(-1.3 * k, -4 * k, 2.6 * k, 5.4 * k); ctx.fillRect(-1.3 * k, -7.2 * k, 2.6 * k, 2.6 * k);
+      ctx.restore();
+    }
+  }
+  function drawCombo(d) {
+    const c = st.run.combo;
+    if (c < 3) return;
+    const X = px(d.Rv * 0.9), Y = py(-d.Rv * 0.2, d.Hd + 0.55);
+    const pop = 1 + V.comboT * 1.2;
+    ctx.save(); ctx.translate(X, Y); ctx.scale(pop, pop); ctx.rotate(-0.06);
+    ctx.font = '900 20px Unbounded, "Arial Black", sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    const txt = `КОМБО ×${c}`, tw = ctx.measureText(txt).width;
+    ctx.fillStyle = C.ink; ctx.fillRect(-6, -22, tw + 12, 28);
+    ctx.fillStyle = C.paper; ctx.fillText(txt, 0, 0);
+    const D = L.derived(st);
+    ctx.font = '600 11px "Golos Text", sans-serif'; ctx.fillStyle = C.ink;
+    ctx.fillText(`+${Math.round((D.comboMult - 1) * 100)}% к выручке · ${Math.ceil(st.run.comboT * 10) / 10} с`, 0, 20);
+    ctx.restore();
+  }
+  function drawWear(d) {
+    const r = st.run, c = r.cond;
+    if (r.broken || r.repairT > 0) return;
+    if (c > 0.85 && V.repairFlash <= 0) return;
+    const X = px(-d.Rv * 1.05), Y = py(d.Rv * 0.4, d.Hd + 0.3);
+    ctx.font = '700 10px "Golos Text", sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    const risk = c < 0.5;
+    const txt = V.repairFlash > 0 ? 'ПОЧИНЕНО' : risk ? `ИЗНОС ${Math.round((1 - c) * 100)}% · РИСК ПОЛОМКИ` : `ИЗНОС ${Math.round((1 - c) * 100)}%`;
+    const tw = ctx.measureText(txt).width + 12;
+    const inv = V.repairFlash > 0 || (risk && Math.sin(st.life.time * 8) > 0);
+    ctx.fillStyle = inv ? C.ink : C.paper; ctx.fillRect(X - tw, Y - 9, tw, 18);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.setLineDash(c < 0.7 ? [] : [3, 3]); ctx.strokeRect(X - tw, Y - 9, tw, 18); ctx.setLineDash([]);
+    ctx.fillStyle = inv ? C.paper : C.ink; ctx.fillText(txt, X - 6, Y + 0.5);
+  }
+  function personScale() { return Math.max(0.75, Math.min(1.3, cam.s / 95)); }
+
+  function drawGauge(D) {
+    const narrow = isMobile();
+    const R = narrow ? 30 : 42;
+    const hb = document.querySelector('.hud').getBoundingClientRect();
+    const gx = narrow ? W - R - 18 : 16 + R + 6;
+    const gy = narrow ? 70 : hb.bottom + R + 18;
+    const rpmK = 60 / TAU;
+    const optR = D.ws * rpmK, curR = Math.abs(st.run.omega) * rpmK;
+    const maxR = Math.max(60, Math.ceil(Math.max(optR * 2, curR * 1.1) / 50) * 50);
+    const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
+    const ang = v => a0 + (a1 - a0) * Math.min(1, v / maxR);
+    ctx.fillStyle = C.paper; ctx.beginPath(); ctx.arc(gx, gy, R + 6, 0, TAU); ctx.fill();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(gx, gy, R, a0, a1); ctx.stroke();
+    // зона захвата
+    ctx.lineWidth = 5; ctx.strokeStyle = C.rule; ctx.beginPath(); ctx.arc(gx, gy, R - 5, a0, ang(optR * 1.6)); ctx.stroke();
+    ctx.strokeStyle = C.ink; ctx.beginPath(); ctx.arc(gx, gy, R - 5, ang(optR * 0.62), ang(optR * 1.6)); ctx.stroke();
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 10; i++) { const a = a0 + (a1 - a0) * i / 10; ctx.beginPath(); line(gx + Math.cos(a) * (R + 1), gy + Math.sin(a) * (R + 1), gx + Math.cos(a) * (R + 4), gy + Math.sin(a) * (R + 4)); ctx.stroke(); }
+    const an = ang(curR);
+    ctx.lineWidth = 2; ctx.beginPath(); line(gx, gy, gx + Math.cos(an) * (R - 3), gy + Math.sin(an) * (R - 3)); ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(gx, gy, 3, 0, TAU); ctx.fill();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.font = `600 ${narrow ? 12 : 15}px "IBM Plex Mono", monospace`; ctx.fillText(Math.round(curR).toString(), gx, gy + R * 0.62);
+    ctx.font = '600 9px "Golos Text", sans-serif'; ctx.fillStyle = C.ink2;
+    ctx.fillText('ОБ/МИН', gx, gy + R * 0.62 + 11);
+    // кольцо заряда маховика
+    const frac = D.flyCap ? Math.min(1, st.run.E / D.flyCap) : 0;
+    ctx.lineWidth = 3; ctx.strokeStyle = C.rule; ctx.beginPath(); ctx.arc(gx, gy, R + 9, -Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+    if (frac > 0.005) { ctx.strokeStyle = C.ink; ctx.beginPath(); ctx.arc(gx, gy, R + 9, -Math.PI / 2, -Math.PI / 2 + frac * TAU); ctx.stroke(); }
+    if (!narrow) {
+      const e = L.eff(Math.abs(st.run.omega), D.ws);
+      const drv = { hand: st.run.broken ? 'крутите с трудом' : 'крутите вы', fly: 'крутит маховик', motor: 'крутит автопривод', none: 'по инерции', broken: 'СЛОМАНА', repair: 'на ремонте' }[st.run.driver] || '';
+      ctx.textAlign = 'left'; ctx.fillStyle = C.ink2; ctx.font = '600 10px "Golos Text", sans-serif';
+      ctx.fillText('ВХОДЯТ', gx + R + 18, gy - 14);
+      ctx.fillStyle = C.ink; ctx.font = '600 16px "IBM Plex Mono", monospace';
+      ctx.fillText(Math.round(e * 100) + '%', gx + R + 18, gy + 4);
+      ctx.fillStyle = C.ink2; ctx.font = '500 10px "Golos Text", sans-serif';
+      ctx.fillText(`оптимум ${Math.round(optR)} об/мин`, gx + R + 18, gy + 19);
+      ctx.fillText(`${drv} · маховик ${Math.round(frac * 100)}%`, gx + R + 18, gy + 33);
+    }
+  }
+
+  function drawWeightChip(d) {
+    if (V.w <= 1 || !V.crowd.length) return;
+    const t = `1 фигурка = ${fmt(V.w, 0)} чел.`;
+    ctx.font = '500 11px "Golos Text", sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const X = px(d.Rv + 0.45), Y = py(d.Rv + 0.35);
+    const tw = ctx.measureText(t).width + 12;
+    ctx.fillStyle = C.paper; ctx.fillRect(X, Y - 9, tw, 18); ctx.strokeStyle = C.ink2; ctx.lineWidth = 1; ctx.strokeRect(X, Y - 9, tw, 18);
+    ctx.fillStyle = C.ink2; ctx.fillText(t, X + 6, Y + 0.5);
+  }
+  function drawGrip(d) {
+    const h = V.hand; if (!h.active) return;
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.setLineDash([4, 5]);
+    ctx.beginPath(); ell(px(0), py(0, d.Hd / 2), d.Rv * cam.s * 1.25, d.Rv * cam.s * K * 1.25); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(h.sx, h.sy, 9, 0, TAU); ctx.stroke();
+  }
+
+  function render(d, D) {
+    fitCamera(d, false);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    drawGround(d);
+    drawSkyline(d);
+    drawStore(d);
+    drawInside(d);
+    drawFacade(d);
+    drawDoor(d, D);
+    const k = personScale();
+    ctx.fillStyle = C.ink2; drawPeople(V.passers.filter(p => p.y < roadY(d)), k);
+    ctx.fillStyle = C.ink; ctx.strokeStyle = C.ink; ctx.lineWidth = 1;
+    drawEntrance(d);
+    ctx.fillStyle = C.ink;
+    drawPeople(V.crowd, k); drawPeople(V.walkers, k);
+    ctx.globalAlpha = 0.55; drawPeople(V.leavers, k); ctx.globalAlpha = 1;
+    drawLamps(d);
+    drawStreetProps(d);
+    drawSpecials();
+    drawVehicles(d, false);
+    ctx.fillStyle = C.ink2; drawPeople(V.passers.filter(p => p.y >= roadY(d)), k);
+    drawTrees(d);
+    drawVehicles(d, true);
+    drawIncident(d);
+    drawFlyers(d);
+    drawFloats();
+    drawCombo(d);
+    drawWear(d);
+    drawWeightChip(d);
+    drawGrip(d);
+    drawGauge(D);
+  }
+
+  // ---------------- интерфейс: касса ----------------
+  const hud = { money: $('#money'), rate: $('#rate'), adm: $('#m-adm'), q: $('#m-q'), flow: $('#m-flow'), buffs: $('#buffs'), hnum: $('#h-num'), ticks: $('#ticks'), sub: $('#b-sub'), badge: $('#author-badge') };
+  const tickEls = [];
+  for (let i = 0; i < 82; i++) { const t = document.createElement('i'); hud.ticks.appendChild(t); tickEls.push(t); }
+  const BUFF_NAMES = { idol: 'Кумир · поток ×3', guide: 'Экскурсия · вход ×3', parade: 'Парад · поток ×5', opening: 'Открытие · поток ×2', robot: 'Робот · трение −50%' };
+  function setText(el_, v) { if (el_.textContent !== v) el_.textContent = v; }
+  const alertEl = $('#alert'), alertT = $('#alert-t'), alertB = $('#alert-b'), alertP = $('#alert-p');
+  alertB.addEventListener('click', () => { Snd.init(); const evs = []; if (L.repair(st, evs)) { handleEvents(evs, dims()); refreshPanel(); updateHUD(); } else sfx('deny'); });
+  function updateAlert() {
+    const r = st.run;
+    let show = true, warn = false, t = '', b = '', dis = false, prog = 0;
+    if (r.repairT > 0) {
+      t = `${r.repairKind === 'emergency' ? 'Аварийный ремонт' : 'Плановый ремонт'}: дверь стоит ещё ${Math.ceil(r.repairT)} с`;
+      b = 'Ремонт идёт'; dis = true; prog = 1 - r.repairT / Math.max(0.01, r.repairTotal);
+    } else if (r.broken) {
+      const c = L.repairCost(st);
+      t = 'Дверь сломана — почти не крутится, автопривод и маховик не тянут';
+      b = `Починить · ${L.isFree(st) ? 'бесплатно' : fmtMoney(c)} · ${Math.ceil(L.repairTime(st))} с`; dis = !L.afford(st, c);
+      if (dis) t += `. Не хватает денег — крутите руками, накопите ${fmtMoney(c)}`;
+    } else if (r.cond < 0.5) {
+      warn = true; const c = L.repairCost(st);
+      t = `Износ ${Math.round((1 - r.cond) * 100)}%: дверь может сломаться в любой момент`;
+      b = `Плановый ремонт · ${L.isFree(st) ? 'бесплатно' : fmtMoney(c)} · ${Math.ceil(L.repairTime(st))} с`; dis = !L.afford(st, c);
+    } else show = false;
+    alertEl.hidden = !show;
+    if (!show) return;
+    alertEl.classList.toggle('warn', warn);
+    setText(alertT, t); setText(alertB, b); alertB.disabled = dis;
+    alertP.style.width = (prog * 100) + '%';
+  }
+  function updateHUD() {
+    const r = st.run, author = L.isFree(st);
+    setText(hud.money, author ? '₽ ∞' : fmtMoney(r.money));
+    const pr = r.rate.profit;
+    setText(hud.rate, (pr >= 0 ? '+' : '') + fmtMoney(pr) + '/с прибыли' + (author ? ' (настоящей)' : ''));
+    setText(hud.adm, fmt(r.admittedRun, 0));
+    setText(hud.q, fmt(r.Q, 0));
+    setText(hud.flow, fmt(r.rate.adm) + '/с');
+    setText(hud.sub, L.STAGES[r.stage].name);
+    hud.badge.hidden = !author;
+    if (author) setText(hud.badge, 'Режим автора · ₽ ∞' + ((st.settings.speed || 1) > 1 ? ` · время ×${st.settings.speed}` : ''));
+    const life = Math.min(st.life.admitted, L.GOAL);
+    setText(hud.hnum, `${fmt(st.life.admitted, 0)} из 8,2 млрд`);
+    updateAlert();
+    const pb = $('#pushbtn'); const Dd = L.derived(st);
+    pb.style.setProperty('--fw', String(Math.round(Dd.flyCap ? Math.min(100, r.E / Dd.flyCap * 100) : 0)));
+    const full = Math.floor(life / 1e8), part = (life % 1e8) / 1e8;
+    for (let i = 0; i < 82; i++) {
+      const t = tickEls[i];
+      const cls = i < full ? 'on' : i === full && part > 0.01 ? 'part' : '';
+      if (t.className !== cls) t.className = cls;
+      if (cls === 'part') t.style.setProperty('--p', Math.round(part * 100) + '%');
+    }
+    const html = r.buffs.map(b => `<span class="buff">${BUFF_NAMES[b.key] || b.key} · ${Math.ceil(b.t)} с<i style="width:${(b.t / b.dur) * 100}%"></i></span>`).join('');
+    if (hud.buffs._h !== html) { hud.buffs.innerHTML = html; hud.buffs._h = html; }
+  }
+
+  // ---------------- яркость белого ----------------
+  const PALETTE = { light: { paper: [230, 232, 227], panel: [242, 243, 239] }, dark: { ink: [227, 229, 223] } };
+  function isDark() {
+    const t = st.settings.theme;
+    if (t === 'dark') return true; if (t === 'light') return false;
+    try { return matchMedia('(prefers-color-scheme: dark)').matches; } catch (e) { return false; }
+  }
+  function applyWhite() {
+    const root = document.documentElement, k = Math.max(0.6, Math.min(1, (st.settings.white || 100) / 100));
+    for (const v of ['--paper', '--panel', '--ink']) root.style.removeProperty(v);
+    if (k < 0.999) {
+      const c = a => `rgb(${a.map(x => Math.round(x * k)).join(',')})`;
+      if (isDark()) root.style.setProperty('--ink', c(PALETTE.dark.ink));
+      else { root.style.setProperty('--paper', c(PALETTE.light.paper)); root.style.setProperty('--panel', c(PALETTE.light.panel)); }
+    }
+    readColors();
+  }
+
+  // ---------------- журнал ----------------
+  function fmtClock(sec) {
+    sec = Math.floor(sec); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s2 = sec % 60;
+    return `${h}:${String(m).padStart(2, '0')}:${String(s2).padStart(2, '0')}`;
+  }
+  function logEvent(msg) {
+    if (!st) return;
+    if (!Array.isArray(st.log)) st.log = [];
+    st.log.unshift({ t: st.life.time, m: msg });
+    if (st.log.length > 40) st.log.length = 40;
+  }
+
+  // ---------------- интерфейс: панель ----------------
+  const pbody = $('#pbody');
+  let curTab = 'door', rows = [];
+  function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function sect(p, t) { p.appendChild(el('div', 'sect', t)); }
+  function note(p, html) { p.appendChild(el('div', 'note', html)); }
+  function readout(p, items) {
+    const box_ = el('div', 'readout'); const bs = [];
+    for (const [lab, f] of items) { const d = el('div'); d.appendChild(el('span', null, lab)); const b = el('b'); d.appendChild(b); box_.appendChild(d); bs.push([b, f]); }
+    p.appendChild(box_);
+    rows.push(() => { for (const [b, f] of bs) setText(b, f()); });
+  }
+  function upRow(p, o) {
+    const r = el('div', 'up');
+    const t = el('div', 'up-title'); const tn = el('span', null, o.title); const lv = el('span', 'lvl'); t.append(tn, lv);
+    const e = el('div', 'up-eff');
+    const b = el('button', 'buy'); const bc = el('span', 'c'); const bn = el('span', 'n'); b.append(bc, bn);
+    r.append(t, e, b); p.appendChild(r);
+    b.addEventListener('click', () => {
+      Snd.init();
+      const evs = [];
+      if (o.buy(evs)) { sfx('buy'); handleEvents(evs, dims()); refreshPanel(); updateHUD(); } else sfx('deny');
+    });
+    rows.push(() => {
+      setText(lv, o.lvl ? o.lvl() : '');
+      const eh = o.eff(); if (e._h !== eh) { e.innerHTML = eh; e._h = eh; }
+      const lock = o.locked ? o.locked() : null;
+      r.classList.toggle('locked', !!lock);
+      b.classList.toggle('lockbtn', !!lock);
+      if (lock) { setText(bc, lock); setText(bn, ''); b.disabled = true; }
+      else { setText(bc, L.isFree(st) && o.free !== false ? 'бесплатно' : o.cost()); setText(bn, o.n ? o.n() : 'купить'); b.disabled = !o.can(); }
+    });
+  }
+  function buyN() { return st.settings.buy === 'max' ? 'max' : +st.settings.buy; }
+  function geoRow(p, id, title, effFn) {
+    upRow(p, {
+      title,
+      lvl: () => `ур. ${st.run.lv[id]}/${L.UP[id].max({ run: { stage: L.STAGES.length - 1 } })}`,
+      eff: () => effFn(L.upQuote(st, id, buyN()).cnt || 1),
+      cost: () => { const q = L.upQuote(st, id, buyN()); return q.cnt ? fmtMoney(q.total) : '—'; },
+      n: () => { const q = L.upQuote(st, id, buyN()); return q.cnt ? `+${q.cnt} ур.` : ''; },
+      can: () => { const q = L.upQuote(st, id, buyN()); return q.cnt > 0 && L.afford(st, q.total); },
+      locked: () => {
+        const max = L.upMax(st, id);
+        if (max === 0) return `нужен: ${L.STAGES[L.UP[id].trans.stage].name}`;
+        if (st.run.lv[id] >= max) {
+          const nextMax = st.run.stage < L.STAGES.length - 1 ? L.UP[id].max({ run: { stage: st.run.stage + 1 } }) : max;
+          return nextMax > max ? `предел здания, нужен: ${L.STAGES[st.run.stage + 1].name}` : 'максимум';
+        }
+        return null;
+      },
+      buy: evs => L.buyUp(st, id, buyN(), evs),
+    });
+  }
+  const rpm = w => Math.round(w * 60 / TAU);
+  const stageLock = l => (l === 'max' ? 'максимум' : l ? `нужен: ${L.STAGES[l].name}` : null);
+  const pct = x => Math.round(x * 100) + '%';
+
+  // приток против пропуска
+  function balanceBox(p) {
+    const box_ = el('div', 'balance');
+    const mk = label => { const row = el('div', 'bar'); const tr = el('div', 'track'); const f = el('div', 'fill'); tr.appendChild(f); const v = el('b'); row.append(el('span', null, label), tr, v); box_.appendChild(row); return [f, v]; };
+    const [fA, vA] = mk('Приходят');
+    const [fT, vT] = mk('Дверь пропустит');
+    const [fI, vI] = mk('Входят сейчас'); fI.classList.add('light');
+    const vd = el('div', 'verdict'); box_.appendChild(vd); p.appendChild(box_);
+    rows.push(() => {
+      const D = L.derived(st), r = st.run;
+      const w = Math.max(Math.abs(r.omega), D.motorTarget);
+      const A = D.arrivals, T = L.throughput(D, w), I = r.rate.adm;
+      const m = Math.max(A, T, I, 1e-9);
+      fA.style.width = (A / m * 100) + '%'; fT.style.width = (T / m * 100) + '%'; fI.style.width = Math.min(100, I / m * 100) + '%';
+      setText(vA, fmt(A) + '/с'); setText(vT, fmt(T) + '/с'); setText(vI, fmt(I) + '/с');
+      let h;
+      if (r.repairT > 0) h = 'Дверь на <b>ремонте</b> и не крутится. Скоро продолжит.';
+      else if (r.broken) h = 'Дверь <b>сломана</b>: пропускает крохи. Нужен аварийный ремонт — кнопка выше на вкладке «Дверь».';
+      else if (w < 0.05) h = 'Дверь стоит. Рисуйте круги мышью вокруг двери, жмите пробел — или купите <b>автопривод</b>.';
+      else if (Math.abs(r.omega) > D.ws * 1.5) h = 'Дверь крутится <b>слишком быстро</b>: людей отбрасывает. Это копит комбо, но впускает меньше и изнашивает дверь.';
+      else if (T < A * 0.8 && r.lv.size >= L.UP.size.max({ run: { stage: L.STAGES.length - 1 } }) && r.blades >= 8 && r.shape >= L.SHAPES.length - 1) h = 'Дверь на <b>пределе конструкции</b>: больше она не пропустит. Ускорить могут только перки франшизы («Инженерное бюро», «Бывалые посетители») и контракты.';
+      else if (T < A * 0.8) h = 'Узкое место — <b>дверь</b>: очередь растёт, часть людей уходит. Расширьте дверь, добавьте лопасти или замените их.';
+      else if (A < T * 0.8) h = 'Узкое место — <b>поток людей</b>: дверь простаивает. Реклама или транспорт во вкладке «Поток».';
+      else h = 'Приток и дверь <b>в равновесии</b>. Растите их вместе.';
+      if (vd._h !== h) { vd.innerHTML = h; vd._h = h; }
+    });
+  }
+
+  function buildDoor(p) {
+    readout(p, [
+      ['Обороты', () => `${rpm(Math.abs(st.run.omega))} об/мин`],
+      ['Успевают войти', () => pct(L.eff(Math.abs(st.run.omega), L.derived(st).ws))],
+      ['Отсек вмещает', () => fmt(L.derived(st).cap) + ' чел.'],
+      ['Состояние', () => pct(st.run.cond)],
+    ]);
+    balanceBox(p);
+    // привод
+    const ctl = el('div', 'ctl');
+    const dr = el('div', 'drive'); ctl.appendChild(dr);
+    const fwRow = el('div', 'bar fw'); const fwTr = el('div', 'track'); const fwF = el('div', 'fill'); fwTr.appendChild(fwF); const fwV = el('b');
+    fwRow.append(el('span', null, 'Маховик'), fwTr, fwV); ctl.appendChild(fwRow);
+    const lab = el('label'); const cb = el('input'); cb.type = 'checkbox'; cb.id = 'auto-opt'; lab.append(cb, document.createTextNode('Автопривод держит оптимальные обороты'));
+    const rr = el('div', 'rangerow'); const rl = el('span'); const rv = el('span'); rr.append(rl, rv);
+    const range = el('input'); range.type = 'range'; range.id = 'motor-pct'; range.min = '0'; range.max = '100'; range.step = '1';
+    ctl.append(lab, range, rr);
+    p.appendChild(ctl);
+    cb.addEventListener('change', () => { st.run.autoOpt = cb.checked; });
+    range.addEventListener('input', () => { st.run.motorPct = range.value / 100; st.run.autoOpt = false; });
+    rows.push(() => {
+      const D = L.derived(st), r = st.run;
+      const who = { hand: r.broken ? 'Вы проворачиваете сломанную дверь с трудом' : 'Сейчас крутите вы', fly: 'Сейчас крутит маховик', motor: 'Сейчас крутит автопривод', none: 'Дверь крутится по инерции', broken: 'Дверь сломана и стоит', repair: 'Дверь на ремонте' }[r.driver] || 'Дверь стоит';
+      const h = `${who}. Рука заряжает маховик, маховик держит оптимум, пока не разрядится, потом включается автопривод.`;
+      if (dr._h !== h) { dr.innerHTML = h; dr._h = h; }
+      fwF.style.width = (D.flyCap ? Math.min(100, r.E / D.flyCap * 100) : 0) + '%';
+      setText(fwV, `${Math.round(r.E)} из ${Math.round(D.flyCap)} с`);
+      cb.checked = r.autoOpt; cb.disabled = r.lv.motor === 0;
+      range.disabled = r.lv.motor === 0;
+      const v = Math.round((r.autoOpt ? (D.motorMax ? D.motorTarget / D.motorMax : 0) : r.motorPct) * 100);
+      if (document.activeElement !== range && +range.value !== v) range.value = v;
+      setText(rl, r.lv.motor ? `Автопривод: ${rpm(D.motorTarget)} об/мин` : 'Автопривода пока нет');
+      setText(rv, r.lv.motor ? `оптимум ${rpm(D.ws)} · предел ${rpm(D.motorMax)}` : '');
+    });
+    // состояние и ремонт
+    sect(p, 'Состояние двери');
+    const rb = el('div', 'repair'); p.appendChild(rb);
+    const rs = el('div', 'rstate'); const rbar = el('div', 'track'); const rfill = el('div', 'fill'); rbar.appendChild(rfill);
+    const rtxt = el('div', 'note'); const rbtn = el('button', 'bigbtn'); rbtn.id = 'repair-btn';
+    rb.append(rs, rbar, rtxt, rbtn);
+    rbtn.addEventListener('click', () => { Snd.init(); const evs = []; if (L.repair(st, evs)) { handleEvents(evs, dims()); refreshPanel(); updateHUD(); } else sfx('deny'); });
+    rows.push(() => {
+      const r = st.run, cost = L.repairCost(st), tm = L.repairTime(st);
+      let state, h, bt, dis = false;
+      if (r.repairT > 0) {
+        state = `${r.repairKind === 'emergency' ? 'Аварийный ремонт' : 'Плановый ремонт'} · ещё ${Math.ceil(r.repairT)} с`;
+        rfill.style.width = ((1 - r.repairT / r.repairTotal) * 100) + '%';
+        h = 'Бригада работает, дверь стоит. Очередь копится, часть людей уходит.';
+        bt = 'Ремонт идёт…'; dis = true;
+      } else if (r.broken) {
+        state = 'СЛОМАНА';
+        rfill.style.width = Math.round(r.cond * 100) + '%';
+        h = 'Ось заклинило: автопривод и маховик не тянут, руками дверь проворачивается еле-еле. Аварийный ремонт дороже и дольше планового.';
+        bt = `Аварийный ремонт · ${fmtMoney(cost)} · ${Math.ceil(tm)} с`; dis = !L.afford(st, cost);
+      } else {
+        const risk = L.breakRisk(st);
+        state = `Исправна · износ ${Math.round((1 - r.cond) * 100)}%` + (risk > 0 ? ` · риск поломки ${(risk * 100).toFixed(1).replace('.', ',')}%/с` : '');
+        rfill.style.width = Math.round(r.cond * 100) + '%';
+        h = 'Износ растёт с квадратом скорости. Ниже 50% дверь может сломаться в любой момент. Плановый ремонт дешевле и быстрее, но дверь на это время встаёт.';
+        bt = r.cond >= 0.999 ? 'Дверь как новая' : `Плановый ремонт · ${fmtMoney(cost)} · ${Math.ceil(tm)} с`; dis = r.cond >= 0.999 || !L.afford(st, cost);
+      }
+      setText(rs, state); setText(rtxt, h);
+      if (L.isFree(st) && !dis && r.repairT <= 0 && (r.broken || r.cond < 0.999)) bt = bt.replace(/· ₽ [^·]+ ·/, '· бесплатно ·');
+      setText(rbtn, bt); rbtn.disabled = dis;
+      rb.classList.toggle('bad', r.broken); rb.classList.toggle('risk', !r.broken && r.cond < 0.5);
+    });
+    geoRow(p, 'crew', 'Сервисная бригада', n => {
+      const lv = st.run.lv.crew;
+      return lv ? `Ремонт быстрее на ${15 * lv}% → <b>${15 * (lv + n)}%</b>, дешевле на ${10 * lv}% → <b>${10 * (lv + n)}%</b>, износ −${8 * lv}% → <b>−${8 * (lv + n)}%</b>.`
+        : 'Бригада сама чинит дверь при износе 40%, до поломки. Каждый уровень: ремонт быстрее на 15% и дешевле на 10%, износ −8%.';
+    });
+    const arl = el('label', 'check slim'); const arc = el('input'); arc.type = 'checkbox'; arc.id = 'auto-repair';
+    const arspan = el('span'); arl.append(arc, arspan);
+    arc.addEventListener('change', () => { st.settings.autoRepair = arc.checked; });
+    p.appendChild(arl);
+    rows.push(() => {
+      const has = st.run.lv.crew >= 1;
+      arc.disabled = !has; arc.checked = has && !!st.settings.autoRepair;
+      setText(arspan, has ? 'Бригада чинит сама, когда износ больше 40% или дверь сломалась' : 'Автоматический ремонт — после найма сервисной бригады');
+    });
+
+    sect(p, 'Улучшения двери');
+    geoRow(p, 'size', 'Расширение двери', n => { const D = L.derived(st); return `Шире отсеки — больше людей за раз: <b>${fmt(D.capFull)}</b> → <b>${fmt(D.capFull * Math.pow(L.SIZE_G, n))}</b> чел. в отсеке.`; });
+    upRow(p, {
+      title: 'Число лопастей', lvl: () => `${st.run.blades} шт.`,
+      eff: () => st.run.blades >= 8 ? 'Восемь лопастей — предел конструкции.' : `Больше отсеков — люди заполняют их плотнее: заполнение ${pct(L.FILL[st.run.blades])} → <b>${pct(L.FILL[st.run.blades + 1])}</b>.`,
+      cost: () => fmtMoney(L.bladeCost(st)), n: () => 'поставить', can: () => L.afford(st, L.bladeCost(st)),
+      locked: () => stageLock(L.bladeLocked(st)),
+      buy: evs => L.buyBlade(st, evs),
+    });
+    upRow(p, {
+      title: 'Замена лопастей', lvl: () => L.SHAPES[st.run.shape].name,
+      eff: () => {
+        const n = L.SHAPES[st.run.shape + 1]; if (!n) return 'Турбина — совершеннее лопастей не бывает.';
+        const c = L.SHAPES[st.run.shape];
+        return `<b>${n.name}</b>: ${n.d} Оптимум <b>${rpm(c.ws)}</b> → <b>${rpm(n.ws)}</b> об/мин, плотность ×${(n.k / c.k).toFixed(2).replace('.', ',')}.`;
+      },
+      cost: () => { const n = L.SHAPES[st.run.shape + 1]; return n ? fmtMoney(n.cost) : '—'; }, n: () => 'заменить',
+      can: () => { const n = L.SHAPES[st.run.shape + 1]; return !!n && L.afford(st, n.cost); },
+      locked: () => stageLock(L.shapeLocked(st)),
+      buy: evs => L.buyShape(st, evs),
+    });
+    sect(p, 'Привод');
+    geoRow(p, 'motor', 'Автопривод', n => {
+      const D = L.derived(st), lv = st.run.lv.motor;
+      if (!lv) return 'Электромотор крутит дверь сам — и когда игра закрыта. Платите за электричество.';
+      if (lv >= L.upMax(st, 'motor') || D.motorMax >= L.MAX_OMEGA) return `Мотор выжат на полную: <b>${rpm(D.motorMax)}</b> об/мин.`;
+      const next = Math.min(L.MAX_OMEGA, D.motorMax * Math.pow(1.18, n));
+      const nt = D.motorMax >= D.ws ? ' Оптимум уже достигнут — сначала замените лопасти.' : '';
+      return `Предел оборотов <b>${rpm(D.motorMax)}</b> → <b>${rpm(next)}</b> об/мин.${nt}`;
+    });
+    geoRow(p, 'gears', 'Шестерни', n => { const D = L.derived(st); return `Рука крутит дверь быстрее и сильнее заряжает маховик: передача ×${D.handRatio.toFixed(1).replace('.', ',')} → <b>×${(D.handRatio + 0.2 * n).toFixed(1).replace('.', ',')}</b>.`; });
+    geoRow(p, 'fly', 'Маховик', n => {
+      const lv = st.run.lv.fly, cap = l => 4 + 8 * (Math.pow(1.3, l) - 1);
+      return `Копит силу руки: запас <b>${Math.round(cap(lv))}</b> → <b>${Math.round(cap(lv + n))}</b> с на оптимуме. Ещё снижает трение на 10% за уровень.`;
+    });
+  }
+  function buildFlow(p) {
+    readout(p, [
+      ['Приходят', () => fmt(L.derived(st).arrivals) + '/с'],
+      ['Ждут в очереди', () => fmt(st.run.Q, 0) + ' чел.'],
+      ['Теряют терпение', () => fmt(st.run.Q * L.LEAVE_RATE) + '/с'],
+      ['Отброшено', () => fmt(st.run.rate.fl) + '/с'],
+    ]);
+    balanceBox(p);
+    note(p, 'Каждую секунду 3,5% очереди уходит. Отброшенные дверью встают и возвращаются в очередь.');
+    sect(p, 'Реклама');
+    geoRow(p, 'ads', 'Реклама', n => { const D = L.derived(st); return `Пешеходов с улицы <b>${fmt(D.walk)}</b> → <b>${fmt(D.walk * Math.pow(L.ADS_G, n))}</b> в секунду.`; });
+    sect(p, 'Групповой вход');
+    note(p, 'Транспорт привозит людей группами. Каждый уровень — ещё маршруты.');
+    for (const t of L.TRANS) {
+      geoRow(p, t.id, t.name, () => {
+        const lv = st.run.lv[t.id], D = L.derived(st);
+        const per = D.walk * Math.max(1, lv) * t.bonus * t.every;
+        return `Раз в ${t.every} с приходит ${t.unit}. Уровень: +${Math.round(t.bonus * 100)}% к пешеходам.` + (lv ? ` Рейс привозит ~<b>${fmt(per, 0)}</b> чел.` : '');
+      });
+    }
+  }
+  function sparkline(p) {
+    const c = el('canvas', 'spark'); c.height = 64; p.appendChild(c);
+    rows.push(() => {
+      const w = c.clientWidth || 300, dpr = Math.min(2, window.devicePixelRatio || 1);
+      if (c.width !== Math.round(w * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(64 * dpr); }
+      const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, 64);
+      const hs = st.run.hist; if (hs.length < 2) return;
+      const mx = Math.max(1e-9, ...hs), mn = Math.min(0, ...hs);
+      const Y = v => 58 - (v - mn) / (mx - mn || 1) * 52;
+      g.strokeStyle = C.rule; g.lineWidth = 1; g.beginPath(); g.moveTo(0, Y(0)); g.lineTo(w, Y(0)); g.stroke();
+      g.beginPath(); hs.forEach((v, i) => { const x = i / (120 - 1) * w; i ? g.lineTo(x, Y(v)) : g.moveTo(x, Y(v)); });
+      g.strokeStyle = C.ink; g.lineWidth = 1.5; g.stroke();
+      const lx = (hs.length - 1) / 119 * w; g.fillStyle = C.ink; g.beginPath(); g.arc(lx, Y(hs[hs.length - 1]), 2.5, 0, TAU); g.fill();
+    });
+  }
+  function buildCash(p) {
+    const fin = el('div', 'fin'); p.appendChild(fin);
+    const lines = [
+      ['Выручка', () => st.run.rate.rev, ''],
+      ['Аренда здания', () => -st.run.rate.rent, ''],
+      ['Электричество', () => -st.run.rate.elec, ''],
+      ['Ремонт', () => -st.run.rate.rep, ''],
+    ];
+    const vals = [];
+    for (const [lab] of lines) { const r = el('div', 'fin-row'); r.append(el('span', null, lab)); const b = el('b'); r.append(b); fin.append(r); vals.push(b); }
+    const tot = el('div', 'fin-row total'); tot.append(el('span', null, 'Прибыль')); const tb = el('b'); tot.append(tb); fin.append(tot);
+    rows.push(() => {
+      lines.forEach(([, f], i) => setText(vals[i], (f() >= 0 ? '+' : '') + fmtMoney(f()) + '/с'));
+      setText(tb, (st.run.rate.profit >= 0 ? '+' : '') + fmtMoney(st.run.rate.profit) + '/с');
+      tot.classList.toggle('neg', st.run.rate.profit < 0);
+    });
+    sect(p, 'Прибыль за 2 минуты');
+    sparkline(p);
+    readout(p, [
+      ['Плата за вход', () => fmtMoney(L.derived(st).fee)],
+      ['Бонус комбо', () => `+${Math.round((L.derived(st).comboMult - 1) * 100)}%`],
+      ['Электричество на оптимуме', () => fmtMoney(L.elecAt(L.derived(st), L.derived(st).ws)) + '/с'],
+      ['Аренда', () => fmtMoney(L.derived(st).rent) + '/с'],
+    ]);
+    note(p, 'Выручка — вошедшие × плата за вход × комбо. Аренда идёт всегда. Электричество платится, только когда крутит автопривод, и растёт с квадратом скорости. Рука и маховик бесплатны.');
+    sect(p, 'Цены');
+    geoRow(p, 'fee', 'Плата за вход', n => { const D = L.derived(st); return `С каждого вошедшего <b>${fmtMoney(D.feeBase)}</b> → <b>${fmtMoney(D.feeBase * Math.pow(L.FEE_G, n))}</b>`; });
+    note(p, 'Комбо: если перекрутить дверь, людей отбрасывает. Серия отбросов подряд даёт до +50% к выручке, пока не прервётся на 2,5 с.');
+  }
+  function buildBuild(p) {
+    const now = el('div', 'stage-now');
+    const sm = el('small', null, 'Сейчас'); const h2 = el('h2'); const nt = el('div', 'note');
+    now.append(sm, h2, nt); p.appendChild(now);
+    rows.push(() => {
+      const S = L.STAGES[st.run.stage];
+      setText(h2, S.name);
+      const h = `Пешеходов у входа <b>${fmt(S.loc)}/с</b> · базовая плата <b>${fmtMoney(S.fee)}</b> · аренда <b>${fmtMoney(L.derived(st).rent)}/с</b>`;
+      if (nt._h !== h) { nt.innerHTML = h; nt._h = h; }
+    });
+    if (st.run.stage < L.STAGES.length - 1) {
+      sect(p, 'Переезд');
+      const N = L.STAGES[st.run.stage + 1], S = L.STAGES[st.run.stage];
+      upRow(p, {
+        title: N.name, lvl: () => `этап ${st.run.stage + 2} из ${L.STAGES.length}`,
+        eff: () => `Пешеходов ×${(N.loc / S.loc).toFixed(1).replace('.', ',')}, базовая плата ×${(N.fee / S.fee).toFixed(1).replace('.', ',')}, предел улучшений выше. Аренда станет <b>${fmtMoney(N.rent * (L.hasC(st, 'rent') ? 0.5 : 1))}/с</b>. Дверь и улучшения переезжают с вами.`,
+        cost: () => fmtMoney(L.stageCost(st)), n: () => 'переехать', can: () => L.afford(st, L.stageCost(st)),
+        buy: evs => L.buyStage(st, evs),
+      });
+    }
+    sect(p, 'Путь компании');
+    const ol = el('ol', 'ladder');
+    L.STAGES.forEach((S, i) => {
+      const li = el('li', i < st.run.stage ? 'done' : i === st.run.stage ? 'cur' : '');
+      li.append(el('span', null, String(i + 1).padStart(2, '0')), el('span', null, S.name), el('span', null, i === 0 ? 'старт' : fmtMoney(S.cost)));
+      ol.appendChild(li);
+    });
+    p.appendChild(ol);
+  }
+  function buildFran(p) {
+    note(p, 'Франшиза — это <b>перезапуск</b>. Вы продаёте текущую точку и открываете новую: снова ларёк, ноль денег, дверь без улучшений. Взамен — <b>энергия вращения (ЭВ)</b>.');
+    note(p, 'ЭВ тратится на <b>перки</b> — они действуют всегда. А перед каждой франшизой выбираются <b>контракты</b> на новый забег. Счётчик человечества не сбрасывается.');
+    readout(p, [
+      ['Получите сейчас', () => `${L.seGain(st)} ЭВ`],
+      ['На счету', () => `${st.meta.se} ЭВ`],
+      ['Франшиз открыто', () => String(st.meta.prestiges)],
+      ['Контрактов на забег', () => String(L.contractSlots(st.meta))],
+    ]);
+    const nx = el('div', 'note'); p.appendChild(nx);
+    rows.push(() => {
+      const g = L.seGain(st), need = Math.pow(g + 1, 2) * 1e5 - st.run.admittedRun;
+      setText(nx, `ЭВ = √(впущено за этот забег ÷ 100 000). До следующей единицы: ещё ${fmt(Math.max(0, need), 0)} чел.`);
+    });
+    const btn = el('button', 'bigbtn'); btn.id = 'prestige-btn';
+    btn.addEventListener('click', () => { if (L.seGain(st) >= 1) showFranchiseModal(); });
+    p.appendChild(btn);
+    rows.push(() => { const g = L.seGain(st); btn.disabled = g < 1; setText(btn, g < 1 ? 'Пока нечего получать — впустите больше людей' : `Открыть франшизу… (+${g} ЭВ)`); });
+
+    sect(p, 'Контракты на следующий забег');
+    const cs = el('div', 'note'); p.appendChild(cs);
+    rows.push(() => {
+      const now = st.run.contracts.map(id => L.CONTRACTS.find(c => c.id === id).name);
+      const h = `Выбрано ${st.meta.nextContracts.length} из ${L.contractSlots(st.meta)}. Сейчас действуют: ${now.length ? now.join(', ') : 'нет'}.`;
+      if (cs._h !== h) { cs.innerHTML = h; cs._h = h; }
+    });
+    const cl = el('div', 'contracts'); p.appendChild(cl);
+    for (const c of L.CONTRACTS) {
+      const lab = el('label', 'check slim'); const ck = el('input'); ck.type = 'checkbox'; ck.id = 'ct-' + c.id;
+      lab.append(ck, el('span', null, `<b>${c.name}.</b> ${c.d}`));
+      ck.addEventListener('change', () => { if (!L.toggleNextContract(st, c.id)) { ck.checked = false; toast(`Свободных мест для контрактов нет: снимите другой или возьмите перк «Отдел контрактов»`); } refreshPanel(); });
+      cl.appendChild(lab);
+      rows.push(() => { ck.checked = st.meta.nextContracts.indexOf(c.id) >= 0; });
+    }
+    sect(p, 'Перки — навсегда');
+    for (const pk of L.PERKS) {
+      upRow(p, {
+        title: pk.name, lvl: () => `${L.perk(st, pk.id)}/${pk.max}`, free: false,
+        eff: () => { const l = L.perk(st, pk.id); return `${pk.what}<br>${l >= pk.max ? 'Взят полностью.' : pk.d(l)}`; },
+        cost: () => `${pk.cost(L.perk(st, pk.id))} ЭВ`, n: () => 'взять',
+        can: () => st.meta.se >= pk.cost(L.perk(st, pk.id)),
+        locked: () => (L.perk(st, pk.id) >= pk.max ? 'взят' : null),
+        buy: () => { const ok = L.buyPerk(st, pk.id); if (ok) logEvent(`Перк «${pk.name}», ур. ${L.perk(st, pk.id)}`); return ok; },
+      });
+    }
+  }
+  function fmtTime(sec) {
+    sec = Math.floor(sec); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+    return h ? `${h} ч ${m} мин` : m ? `${m} мин ${s} с` : `${s} с`;
+  }
+  function seg(p, label, opts, get, set) {
+    const row = el('div', 'subbar'); row.style.padding = '0'; row.style.border = '0';
+    row.appendChild(el('span', null, label));
+    const sg = el('div', 'seg');
+    for (const [v, t] of opts) {
+      const b = el('button', null, t); b.dataset.v = v;
+      b.addEventListener('click', () => { set(v); refreshPanel(); updateHUD(); });
+      sg.appendChild(b);
+    }
+    row.appendChild(sg); p.appendChild(row);
+    rows.push(() => { for (const b of sg.children) b.setAttribute('aria-pressed', String(b.dataset.v === String(get()))); });
+  }
+  function slider(p, id, label, min, max, get, set, fmtV) {
+    const row = el('div', 'ctl'); const top = el('div', 'rangerow'); const l = el('span', null, label); const v = el('span'); top.append(l, v);
+    const r = el('input'); r.type = 'range'; r.id = id; r.min = String(min); r.max = String(max); r.step = '1';
+    row.append(top, r); p.appendChild(row);
+    r.addEventListener('input', () => { set(+r.value); setText(v, fmtV(+r.value)); });
+    rows.push(() => { if (document.activeElement !== r) r.value = String(get()); setText(v, fmtV(get())); });
+  }
+  function authorBox(p) {
+    const b = el('div', 'authorbox');
+    sect(b, 'Режим автора');
+    b.appendChild(el('div', 'note', 'Деньги бесконечны, все покупки бесплатны. Настоящая прибыль копится отдельно и вернётся, когда вы выключите режим. Перки по-прежнему стоят ЭВ.'));
+    seg(b, 'Время', [['1', '×1'], ['5', '×5'], ['20', '×20'], ['100', '×100']], () => String(st.settings.speed || 1), v => { st.settings.speed = +v; });
+    const g2 = el('div', 'grid2');
+    const mk = (t, fn) => { const x = el('button', 'bigbtn ghost', t); x.addEventListener('click', () => { Snd.init(); fn(); refreshPanel(); updateHUD(); }); g2.appendChild(x); };
+    mk('+100 ЭВ', () => { st.meta.se += 100; toast('+100 ЭВ на счёт'); });
+    mk('Позвать гостя', () => { st.run.specialT = 0; });
+    mk('Пригнать транспорт', () => {
+      let any = false;
+      for (const t of L.TRANS) if (st.run.lv[t.id]) { st.run.tTimers[t.id] = 0; any = true; }
+      if (!any) toast('Сначала купите транспорт во вкладке «Поток»');
+    });
+    mk('Толпа у входа', () => { st.run.Q += Math.max(60, L.derived(st).arrivals * 30); });
+    mk('Зарядить маховик', () => { st.run.E = L.derived(st).flyCap; });
+    mk('Сломать дверь', () => { const r = st.run; if (r.repairT > 0) return; r.broken = true; r.cond = 0.3; r.combo = 0; st.life.breakdowns++; handleEvents([{ type: 'breakdown' }], dims()); });
+    mk('+1 млрд человечеству', () => { st.life.admitted += 1e9; });
+    mk('Всё на максимум', () => {
+      const evs = [];
+      while (L.buyStage(st, evs)); for (const id of Object.keys(L.UP)) L.buyUp(st, id, 'max', evs);
+      while (L.buyBlade(st, evs)); while (L.buyShape(st, evs));
+      handleEvents(evs, dims()); toast('Здание, дверь и транспорт прокачаны до предела');
+    });
+    mk('Выключить режим', () => setAuthor(false));
+    b.appendChild(g2); p.appendChild(b);
+  }
+  function setAuthor(on) {
+    if (!!st.settings.author === on) return;
+    st.settings.author = on; if (!on) st.settings.speed = 1;
+    toast(on ? 'Режим автора: деньги бесконечны, покупки бесплатны' : 'Режим автора выключен');
+    logEvent(on ? 'Включён режим автора' : 'Выключен режим автора');
+    showTab(on ? 'more' : curTab); updateHUD(); save();
+  }
+  const SOUND_NAMES = { all: 'весь звук', nodoor: 'без звука двери', off: 'звук выключен' };
+  function buildMore(p) {
+    if (L.isFree(st)) authorBox(p);
+    sect(p, 'Звук');
+    seg(p, 'Режим', [['all', 'Весь'], ['nodoor', 'Без двери'], ['off', 'Выкл']], () => st.settings.soundMode, v => { st.settings.soundMode = v; Snd.init(); });
+    note(p, '«Без двери» убирает гул, свист и щелчки двери, но оставляет сигналы покупок, гостей и переездов.');
+    slider(p, 'vol', 'Громкость', 0, 100, () => Math.round((st.settings.volume ?? 0.7) * 100), v => { st.settings.volume = v / 100; Snd.init(); }, v => v + '%');
+    sect(p, 'Изображение');
+    seg(p, 'Тема', [['auto', 'Авто'], ['light', 'Светлая'], ['dark', 'Тёмная']], () => st.settings.theme, v => { st.settings.theme = v; applyTheme(); });
+    slider(p, 'white', 'Яркость белого', 60, 100, () => st.settings.white || 100, v => { st.settings.white = v; applyWhite(); }, v => v + '%');
+    seg(p, 'Толпа', [['400', '400'], ['1200', '1200'], ['2500', '2500'], ['5000', '5000']], () => String(st.settings.crowd || 1200), v => { st.settings.crowd = +v; applyCrowd(); });
+    note(p, 'Сколько фигурок рисовать одновременно. На слабом компьютере ставьте меньше — на экономику это не влияет.');
+    sect(p, 'Как всё устроено');
+    p.appendChild(el('div', 'list', `<ul>
+      <li data-m="1">Люди приходят с улицы и на транспорте и встают в очередь у входа.</li>
+      <li data-m="2">Отсек двери проходит мимо очереди и забирает столько, сколько вмещает и сколько успевает запрыгнуть.</li>
+      <li data-m="3">С другой стороны отсек высыпает людей в зал. Каждый платит за вход, гуляет у стеллажей и уходит через боковой выход.</li>
+      <li data-m="4">Крутят дверь рука, маховик и автопривод. Рука и маховик бесплатны, автопривод тратит электричество.</li>
+      <li data-m="5">Выше оптимума людей отбрасывает: они встают и снова в очередь. Серия отбросов — комбо, до +50% к выручке, но дверь быстрее изнашивается.</li>
+      <li data-m="6">Дверь изнашивается. Ниже 50% она может сломаться: тогда автопривод и маховик бессильны, руками — еле-еле. Ремонт стоит денег и времени, аварийный — дороже и дольше.</li>
+      <li data-m="7">Из прибыли платится аренда здания. Переезд даёт больше людей и дороже вход, но и аренда выше.</li>
+      <li data-m="8">Цель — 8,2 млрд впущенных. Предел двери ограничен, поэтому даже полная прокачка не заканчивает игру сразу — помогают перки франшизы.</li>
+    </ul>`));
+    sect(p, 'Статистика');
+    const kv = el('div', 'kv'); p.appendChild(kv);
+    const stats = [
+      ['Время в игре', () => fmtTime(st.life.time)],
+      ['Текущий забег', () => fmtTime(st.run.runTime)],
+      ['Впущено всего', () => fmt(st.life.admitted, 0)],
+      ['Заработано всего', () => fmtMoney(st.life.money)],
+      ['Потрачено всего', () => fmtMoney(st.life.spent)],
+      ['Франшиз открыто', () => String(st.meta.prestiges)],
+      ['Рекорд оборотов', () => `${rpm(st.life.maxOmega)} об/мин`],
+      ['Рекорд комбо', () => `×${st.life.maxCombo}`],
+      ['Поломок', () => String(st.life.breakdowns || 0)],
+      ['Ремонтов', () => String(st.life.repairs || 0)],
+      ['Отброшено дверью', () => fmt(st.life.flung, 0)],
+      ['Особых гостей', () => String(st.life.specials)],
+    ];
+    const vals = [];
+    for (const [k] of stats) { kv.appendChild(el('span', null, k)); const v = el('span'); kv.appendChild(v); vals.push(v); }
+    rows.push(() => stats.forEach(([, f], i) => setText(vals[i], f())));
+    sect(p, 'Журнал');
+    const lg = el('ul', 'log'); p.appendChild(lg);
+    rows.push(() => {
+      const items = (st.log || []).slice(0, 15);
+      const key = items.length + ':' + (items[0] ? items[0].t + items[0].m : '');
+      if (lg._k === key) return; lg._k = key;
+      lg.innerHTML = items.length ? items.map(x => `<li><span>${fmtClock(x.t)}</span><span>${x.m}</span></li>`).join('') : '<li><span>—</span><span>Пока ничего не произошло.</span></li>';
+    });
+    sect(p, 'Управление');
+    p.appendChild(el('div', 'keys', '<kbd>ЛКМ</kbd> зажать и рисовать круги вокруг двери — крутить и заряжать маховик. На телефоне — пальцем.<br><kbd>Пробел</kbd> или кнопка «Крутить» на телефоне — толкать дверь. <kbd>1</kbd>–<kbd>6</kbd> — вкладки. <kbd>M</kbd> — режим звука.<br>Таблички над прохожими — особые гости: наведите, чтобы узнать бонус, и кликните.'));
+    sect(p, 'Сохранение');
+    note(p, 'Игра сохраняется сама каждые 10 секунд в этом браузере. Чтобы перенести прогресс, получите код и вставьте его на другом устройстве.');
+    const ta = el('textarea'); ta.id = 'save-code'; ta.placeholder = 'Код сохранения';
+    const br = el('div', 'btnrow');
+    const bx = el('button', 'bigbtn ghost', 'Получить код'); const bi = el('button', 'bigbtn ghost', 'Загрузить код');
+    br.append(bx, bi); p.append(br, ta);
+    bx.addEventListener('click', () => {
+      save();
+      const code = btoa(unescape(encodeURIComponent(L.serialize(st))));
+      ta.value = code; ta.select();
+      try { navigator.clipboard.writeText(code).then(() => toast('Код скопирован'), () => toast('Код в поле — скопируйте его вручную')); }
+      catch (e) { toast('Код в поле — скопируйте его вручную'); }
+    });
+    bi.addEventListener('click', () => {
+      try {
+        const json = decodeURIComponent(escape(atob(ta.value.trim())));
+        st = L.deserialize(json); resetVisuals(); applyTheme(); applyCrowd(); save(); showTab('door'); toast('Сохранение загружено');
+      } catch (e) { toast('Код не подошёл: он от старой версии или скопирован не целиком'); }
+    });
+    const rb = el('button', 'bigbtn ghost', 'Стереть прогресс…');
+    rb.addEventListener('click', showResetModal);
+    p.appendChild(rb);
+  }
+  const TABS = { door: buildDoor, flow: buildFlow, cash: buildCash, build: buildBuild, fran: buildFran, more: buildMore };
+  const TAB_ORDER = ['door', 'flow', 'cash', 'build', 'fran', 'more'];
+  function showTab(t) {
+    curTab = t; rows = []; pbody.innerHTML = '';
+    for (const b of document.querySelectorAll('#tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === t));
+    TABS[t](pbody);
+    const buyTabs = t === 'door' || t === 'flow' || t === 'cash';
+    $('#buyseg').style.visibility = buyTabs ? 'visible' : 'hidden';
+    setText($('#sub-l'), buyTabs ? 'Покупать по' : t === 'fran' ? `Энергия вращения: ${st.meta.se} ЭВ` : t === 'build' ? `Этап ${st.run.stage + 1} из ${L.STAGES.length}` : 'Настройки и сведения');
+    refreshPanel(); pbody.scrollTop = 0;
+  }
+  function refreshPanel() {
+    for (const r of rows) r();
+    for (const b of document.querySelectorAll('#buyseg button')) b.setAttribute('aria-pressed', String(b.dataset.n === String(st.settings.buy)));
+    if (curTab === 'fran') setText($('#sub-l'), `Энергия вращения: ${st.meta.se} ЭВ`);
+    const af = c => L.afford(st, c);
+    const free = L.isFree(st);
+    const upOk = id => L.upMax(st, id) > st.run.lv[id] && af(L.upCost(st, id));
+    const can = {
+      door: !free && (['size', 'motor', 'gears', 'fly'].some(upOk) || (!L.bladeLocked(st) && af(L.bladeCost(st))) || (!L.shapeLocked(st) && af(L.SHAPES[st.run.shape + 1].cost))),
+      flow: !free && ['ads', ...L.TRANS.map(t => t.id)].some(upOk),
+      cash: !free && upOk('fee'),
+      build: !free && af(L.stageCost(st)),
+      fran: (L.seGain(st) >= 1 && st.run.stage >= 3) || L.PERKS.some(p => L.perk(st, p.id) < p.max && st.meta.se >= p.cost(L.perk(st, p.id))),
+      more: false,
+    };
+    for (const b of document.querySelectorAll('#tabs button')) {
+      const on = can[b.dataset.tab] && b.dataset.tab !== curTab;
+      let dot = b.querySelector('.dot');
+      if (on && !dot) { dot = el('span', 'dot'); b.appendChild(dot); } else if (!on && dot) dot.remove();
+    }
+  }
+  $('#tabs').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return; Snd.init();
+    if (isMobile() && st.settings.sheet === 'collapsed') setSheet('half');
+    showTab(b.dataset.tab);
+  });
+  function setSheet(v) { st.settings.sheet = v; applySheet(); setTimeout(() => { layout(); }, 280); layout(); }
+  (() => {
+    const g = $('#sheet-grip'); let y0 = null, moved = false;
+    const order = ['collapsed', 'half', 'full'];
+    g.addEventListener('pointerdown', e => { y0 = e.clientY; moved = false; try { g.setPointerCapture(e.pointerId); } catch (er) { /* без захвата */ } });
+    g.addEventListener('pointermove', e => {
+      if (y0 == null) return; const dy = e.clientY - y0;
+      if (Math.abs(dy) > 36) { const i = order.indexOf(st.settings.sheet || 'half'); setSheet(order[Math.max(0, Math.min(2, i + (dy < 0 ? 1 : -1)))]); y0 = e.clientY; moved = true; }
+    });
+    g.addEventListener('pointerup', () => {
+      if (y0 != null && !moved) { const i = order.indexOf(st.settings.sheet || 'half'); setSheet(order[(i + 1) % 3]); }
+      y0 = null;
+    });
+  })();
+  (() => {
+    const b = $('#pushbtn');
+    const on = e => { e.preventDefault(); Snd.init(); V.push = true; b.classList.add('on'); try { b.setPointerCapture(e.pointerId); } catch (er) { /* без захвата */ } };
+    const off = () => { V.push = false; b.classList.remove('on'); };
+    b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('lostpointercapture', off);
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  })();
+  $('#buyseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; st.settings.buy = b.dataset.n === 'max' ? 'max' : +b.dataset.n; refreshPanel(); });
+
+  // ---------------- подсказки и тосты ----------------
+  function toast(msg) {
+    const box_ = $('#toasts'); const t = el('div', 'toast'); t.textContent = msg; box_.appendChild(t);
+    while (box_.children.length > 3) box_.firstChild.remove();
+    setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 450); }, 4200);
+  }
+  function hintText(D) {
+    const r = st.run;
+    const thr = L.throughput(D, Math.max(Math.abs(r.omega), D.motorTarget));
+    if (r.lv.motor === 0 && !L.afford(st, L.upCost(st, 'motor'))) return 'Зажмите кнопку мыши и рисуйте круги вокруг двери — она закрутится, а маховик зарядится. Пробел тоже толкает.';
+    if (r.lv.motor === 0) return 'Хватает на автопривод (вкладка «Дверь»): он будет крутить дверь без вас.';
+    if (V.specials.some(s => s.state === 'walk')) return 'По улице идёт особый гость с табличкой. Наведите курсор — увидите бонус. Кликните, пока не ушёл.';
+    if (r.repairT > 0) return `Идёт ремонт: дверь стоит ещё ${Math.ceil(r.repairT)} с.`;
+    if (r.broken) return 'Дверь сломана и почти не крутится. Почините её: кнопка в красной плашке сверху или во вкладке «Дверь».';
+    if (r.cond < 0.5) return 'Износ выше 50% — дверь может сломаться в любой момент. Сделайте плановый ремонт, пока не поздно.';
+    if (r.rate.profit < 0) return 'Касса в минусе: аренда и электричество съедают выручку. Загляните во вкладку «Касса».';
+    if (Math.abs(r.omega) > D.ws * 1.5) return 'Слишком быстро: людей отбрасывает. Комбо растёт, но впускаете меньше, а дверь изнашивается.';
+    if (!L.isFree(st) && L.afford(st, L.stageCost(st))) return 'Денег хватает на переезд в новое здание — вкладка «Здание». Учтите новую аренду.';
+    if (r.stage >= 4 && L.seGain(st) >= 5 && st.meta.prestiges === 0) return `Франшиза принесёт ${L.seGain(st)} ЭВ на перки. Во вкладке «Франшиза» подробно написано, что сбросится.`;
+    if (r.Q > thr * 15 && r.Q > 30) return 'Очередь растёт быстрее, чем дверь впускает: расширьте дверь, добавьте или замените лопасти.';
+    if (thr > D.arrivals * 1.6) return 'Дверь простаивает: закажите рекламу или транспорт во вкладке «Поток».';
+    return 'Цель — впустить всё человечество: 8,2 млрд. Каждое деление шкалы сверху — 100 млн.';
+  }
+
+  // ---------------- окна ----------------
+  function modal(html, buttons, wide) {
+    const m = $('#modal'), c = $('#mcard');
+    c.className = 'card' + (wide ? ' wide' : '');
+    c.innerHTML = html;
+    const br = el('div', 'btnrow'); const btns = [];
+    for (const [txt, fn, ghost] of buttons) {
+      const b = el('button', 'bigbtn' + (ghost ? ' ghost' : ''), txt);
+      b.addEventListener('click', () => { Snd.init(); m.hidden = true; if (fn) fn(); });
+      br.appendChild(b); btns.push(b);
+    }
+    c.appendChild(br); m.hidden = false; c.scrollTop = 0;
+    setTimeout(() => { const b = btns.find(x => !x.disabled); if (b) b.focus(); }, 30);
+    return { card: c, btns };
+  }
+  function gate(card, btn) {
+    const ck = card.querySelector('.check input');
+    btn.disabled = true;
+    ck.addEventListener('change', () => { btn.disabled = !ck.checked; });
+  }
+  function showFranchiseModal() {
+    const r = st.run, lv = r.lv, g = L.seGain(st);
+    const capL = L.perk(st, 'capital'), fac = L.perk(st, 'factory');
+    const startMoney = L.START_MONEY[capL];
+    const transLv = L.TRANS.reduce((a, t) => a + lv[t.id], 0);
+    const need = Math.pow(g + 1, 2) * 1e5 - r.admittedRun;
+    const low = g < Math.max(5, Math.ceil(st.meta.seTotal * 0.4));
+    const pl = (n, a, b, c) => L.plural(n, a, b, c);
+    const next = st.meta.nextContracts.map(id => L.CONTRACTS.find(c => c.id === id).name);
+    const affordable = L.PERKS.filter(p => L.perk(st, p.id) < p.max && p.cost(L.perk(st, p.id)) <= st.meta.se + g).length;
+    const html = `<div class="eyebrow">Франшиза № ${st.meta.prestiges + 1}</div>
+      <h1>Открыть франшизу?</h1>
+      <p>Вы продаёте «${L.STAGES[r.stage].name}» и открываете новую точку сети — снова с ларька у дома. <b>Отменить это нельзя.</b></p>
+      <div class="cols">
+        <div class="list"><h3>Вы получите</h3><ul>
+          <li data-m="+"><b>${g} ЭВ</b> — на счету станет ${st.meta.se + g} ЭВ. Сейчас на них можно взять ${affordable} ${pl(affordable, 'перк', 'перка', 'перков')}.</li>
+          <li data-m="+">Контракты на новый забег: ${next.length ? next.join(', ') : '<b>не выбраны</b> — их можно отметить во вкладке «Франшиза»'}.</li>
+        </ul></div>
+        <div class="list"><h3>Обнулится</h3><ul>
+          <li data-m="−">Деньги: <b>${fmtMoney(r.money)}</b> → ${fmtMoney(startMoney)}</li>
+          <li data-m="−">Здание: ${L.STAGES[r.stage].name} → Ларёк у дома</li>
+          <li data-m="−">Дверь: расширение ур. ${lv.size}, ${r.blades} ${pl(r.blades, 'лопасть', 'лопасти', 'лопастей')} (${L.SHAPES[r.shape].name.toLowerCase()})</li>
+          <li data-m="−">Привод: автопривод ур. ${lv.motor} → ${4 * fac}, шестерни ур. ${lv.gears} → ${2 * fac}, маховик ур. ${lv.fly} → ${3 * fac}</li>
+          <li data-m="−">Реклама ур. ${lv.ads}, плата за вход ур. ${lv.fee}, транспорт: ${transLv} ${pl(transLv, 'уровень', 'уровня', 'уровней')}</li>
+          <li data-m="−">Очередь (${fmt(r.Q, 0)} чел.), бонусы гостей и текущие контракты</li>
+        </ul></div>
+        <div class="list"><h3>Останется</h3><ul>
+          <li data-m="✓">Человечество: ${fmt(st.life.admitted, 0)} из 8,2 млрд</li>
+          <li data-m="✓">Вся ЭВ и взятые перки</li>
+          <li data-m="✓">Статистика, журнал и настройки</li>
+        </ul></div>
+      </div>
+      <div class="warn">${low
+        ? `Энергии пока немного. Обычно франшизу открывают, когда рост заметно замедлился. Следующая единица ЭВ — после ещё ${fmt(Math.max(0, need), 0)} впущенных.`
+        : `Хороший момент: ${g} ЭВ заметно ускорят следующий забег.`}</div>
+      <label class="check"><input type="checkbox" id="fr-ok"><span>Я понимаю: деньги, здание и все улучшения обнулятся, вернуть их будет нельзя.</span></label>`;
+    const m = modal(html, [['Открыть франшизу', doPrestige], ['Остаться', null, true]], true);
+    gate(m.card, m.btns[0]);
+  }
+  function doPrestige() {
+    const g = L.seGain(st); if (g < 1) return;
+    const name = L.STAGES[st.run.stage].name;
+    L.prestige(st); resetVisuals();
+    logEvent(`Франшиза № ${st.meta.prestiges}: продан «${name}», +${g} ЭВ`);
+    save();
+    toast(`Франшиза открыта: +${g} ЭВ. Возьмите перки — они действуют всегда.`); sfx('stage');
+    showTab('fran');
+  }
+  function showResetModal() {
+    const html = `<div class="eyebrow">Начать с нуля</div>
+      <h1>Стереть весь прогресс?</h1>
+      <p>Удалятся деньги, здания, улучшения, энергия вращения, перки, счётчик человечества, статистика и журнал. Останутся только настройки.</p>
+      <div class="warn">Если хотите сохранить копию, сначала нажмите «Получить код» и сохраните его.</div>
+      <label class="check"><input type="checkbox" id="rs-ok"><span>Я понимаю, что прогресс удалится безвозвратно.</span></label>`;
+    const m = modal(html, [['Стереть', () => {
+      const keep = Object.assign({}, st.settings, { author: false, speed: 1 });
+      st = L.newState(); Object.assign(st.settings, keep);
+      resetVisuals(); applyTheme(); save(); showTab('door'); toast('Новая игра. Ларёк снова открыт.');
+    }], ['Отмена', null, true]], false);
+    gate(m.card, m.btns[0]);
+  }
+  function showIntro() {
+    modal(`<div class="eyebrow">Ларёк у дома · одна вращающаяся дверь</div>
+      <h1>Круговорот</h1>
+      <p>У вас крошечный ларёк и стеклянная вертушка на входе. Люди ждут в очереди, дверь переносит их внутрь, каждый платит за вход. Из выручки — аренда, электричество и улучшения.</p>
+      <p>Крутите дверь, расширяйте её, меняйте лопасти, зовите автобусы и самолёты. Цель скромная: впустить всё человечество — <b>8,2 млрд человек</b>.</p>
+      <p class="note">Зажмите кнопку мыши и рисуйте круги вокруг двери — сила руки копится в маховике. Слишком быстро — людей отбросит. Пробел тоже толкает.</p>`,
+      [['Открыть двери', null]]);
+  }
+  function showOffline(o) {
+    const head = o.already ? 'Дверь так и стоит сломанной' : `+${fmt(o.people, 0)} чел.`;
+    const body = o.already ? 'Пока вас не было, сломанная дверь ничего не впустила. Почините её — и автопривод снова заработает.'
+      : `Автопривод крутил дверь без вас. Прибыль после аренды, электричества и ремонтов: <b>+${fmtMoney(o.money)}</b>.` + (o.broke ? ` <b>Через ${Math.round(o.workMin)} мин дверь сломалась</b> и простояла до вашего возвращения — наймите сервисную бригаду, она чинит сама.` : '');
+    modal(`<div class="eyebrow">Пока вас не было · ${fmtTime(o.seconds)}</div>
+      <h1>${head}</h1>
+      <p>${body}</p>
+      <p class="note">Без присмотра дверь работает на ${Math.round((o.share || 0.25) * 100)}% мощности. Перк «Ночная смена» поднимает эту долю.</p>`,
+      [['К двери', null]]);
+  }
+  function showWin() {
+    logEvent('Всё человечество внутри: 8,2 млрд');
+    modal(`<div class="eyebrow">8 200 000 000 человек</div>
+      <h1>Всё человечество внутри</h1>
+      <p>Ларёк у дома превратился в насос, который втянул планету. Двери крутятся, касса звенит, снаружи никого.</p>
+      <div class="kv">
+        <span>Время</span><span>${fmtTime(st.life.time)}</span>
+        <span>Франшиз</span><span>${st.meta.prestiges}</span>
+        <span>Рекорд оборотов</span><span>${rpm(st.life.maxOmega)} об/мин</span>
+        <span>Рекорд комбо</span><span>×${st.life.maxCombo}</span>
+        <span>Отброшено дверью</span><span>${fmt(st.life.flung, 0)}</span>
+        <span>Особых гостей</span><span>${st.life.specials}</span>
+        <span>Заработано</span><span>${fmtMoney(st.life.money)}</span>
+        <span>Потрачено</span><span>${fmtMoney(st.life.spent)}</span>
+      </div>
+      <p class="note">Можно крутить дальше.</p>`,
+      [['Крутить дальше', null]]);
+  }
+
+  // ---------------- ввод ----------------
+  function angleAt(sx, sy) { const d = dims(); return Math.atan2((sy - py(0, d.Hd / 2)) / (cam.s * K), (sx - cam.cx) / cam.s); }
+  function localXY(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  cv.addEventListener('pointerdown', e => {
+    Snd.init();
+    const [x, y] = localXY(e);
+    const sp = hitSpecial(x, y);
+    if (sp) { clickSpecial(sp); return; }
+    const h = V.hand; h.active = true; h.pid = e.pointerId; h.lastA = angleAt(x, y); h.lastT = performance.now(); h.omega = 0; h.sx = x; h.sy = y; h.lastMove = performance.now();
+    try { cv.setPointerCapture(e.pointerId); } catch (er) { /* без захвата */ }
+    cv.classList.add('grabbing');
+  });
+  cv.addEventListener('pointermove', e => {
+    const [x, y] = localXY(e);
+    const h = V.hand;
+    if (h.active && e.pointerId === h.pid) {
+      const now = performance.now(), a = angleAt(x, y);
+      let da = a - h.lastA; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU;
+      const dtm = (now - h.lastT) / 1000;
+      if (dtm > 0.004) {
+        const lim = L.HAND_MAX * 1.5;
+        const inst = Math.max(-lim, Math.min(lim, da / dtm));
+        h.omega = h.omega * 0.45 + inst * 0.55; h.lastA = a; h.lastT = now; h.lastMove = now;
+      }
+      h.sx = x; h.sy = y;
+    } else {
+      const sp = hitSpecial(x, y); V.hover = sp;
+      cv.classList.toggle('pointing', !!sp);
+    }
+  });
+  function endHand(e) { const h = V.hand; if (h.active && (!e || e.pointerId === h.pid)) { h.active = false; h.omega = 0; cv.classList.remove('grabbing'); } }
+  cv.addEventListener('pointerup', endHand); cv.addEventListener('pointercancel', endHand); cv.addEventListener('lostpointercapture', endHand);
+  const SECRET = ['KeyA', 'KeyU', 'KeyT', 'KeyH', 'KeyO', 'KeyR'];
+  let secretPos = 0;
+  window.addEventListener('keydown', e => {
+    if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) return;
+    if (e.code === SECRET[secretPos]) { secretPos++; if (secretPos === SECRET.length) { secretPos = 0; setAuthor(!st.settings.author); return; } }
+    else secretPos = e.code === SECRET[0] ? 1 : 0;
+    if (e.code === 'Space') { V.push = true; Snd.init(); e.preventDefault(); }
+    else if (/^Digit[1-6]$/.test(e.code)) showTab(TAB_ORDER[+e.code.slice(5) - 1]);
+    else if (e.code === 'KeyM') { const order = ['all', 'nodoor', 'off']; st.settings.soundMode = order[(order.indexOf(st.settings.soundMode) + 1) % 3]; Snd.init(); toast('Звук: ' + SOUND_NAMES[st.settings.soundMode]); refreshPanel(); }
+  });
+  window.addEventListener('keyup', e => { if (e.code === 'Space') V.push = false; });
+  window.addEventListener('blur', () => { V.push = false; endHand(); });
+
+  // ---------------- цикл ----------------
+  function resetVisuals() {
+    V.crowd = []; V.walkers = []; V.leavers = []; V.passers = []; V.flyers = []; V.smoke = []; V.inside = []; V.floats = []; V.vehicles = []; V.specials = []; V.sources = [];
+    V.w = 1; V.wPending = 1; resetRiders();
+  }
+  let last = performance.now(), saveT = 0, uiT = 0, hintT = 0, hiddenAt = 0;
+  const hintEl = $('#hint');
+  function frame(now) {
+    let dt = Math.max(0, (now - last) / 1000); last = now;
+    if (dt > 2) catchUp(dt); else {
+      dt = Math.min(dt, 0.1);
+      const speed = L.isFree(st) ? Math.max(1, st.settings.speed || 1) : 1;
+      const d = simulate(dt * speed);
+      const D = updateVisuals(dt, d);
+      render(d, D);
+      Snd.update(st.run.omega);
+      uiT += dt; hintT += dt; saveT += dt;
+      if (uiT > 0.2) {
+        uiT = 0; updateHUD(); refreshPanel();
+        if (!st.seNotified && L.seGain(st) >= 1) {
+          st.seNotified = true;
+          toast('Стала доступна франшиза. Подробности во вкладке «Франшиза» — без вашего подтверждения ничего не сбросится.');
+        }
+      }
+      if (hintT > 1) { hintT = 0; setText(hintEl, hintText(D)); }
+      if (saveT > 10) { saveT = 0; save(); }
+    }
+    requestAnimationFrame(frame);
+  }
+  function catchUp(sec) {
+    const sim = Math.min(sec, 120), evs = [];
+    for (let t = 0; t < sim; t += 0.05) L.step(st, 0.05, {}, evs);
+    if (evs.some(e => e.type === 'win')) setTimeout(showWin, 300);
+    if (sec > 120) { const o = L.offline(st, sec - 120); if (o) { toast(`Пока вкладка спала: +${fmt(o.people, 0)} чел., +${fmtMoney(o.money)}`); logEvent(`Вкладка спала: +${fmt(o.people, 0)} чел.`); } }
+    resetVisuals();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { hiddenAt = Date.now(); save(); }
+    else if (hiddenAt) { const gap = (Date.now() - hiddenAt) / 1000; hiddenAt = 0; last = performance.now(); if (gap > 2) catchUp(gap); }
+  });
+  window.addEventListener('pagehide', save);
+  window.addEventListener('resize', () => { resize(); if (st) fitCamera(dims(), true); });
+
+  function start(data) {
+    let fresh = false;
+    try {
+      if (data && data.save) st = L.deserialize(data.save);
+    } catch (e) { st = null; }
+    if (!st) {
+      const raw = lsGet(SAVE_KEY);
+      if (raw) { try { st = L.deserialize(raw); } catch (e) { st = null; } }
+      if (st && !(data && data.save)) {
+        const gap = (Date.now() - (st.lastSave || Date.now())) / 1000;
+        const o = gap > 30 ? L.offline(st, gap) : null;
+        if (o) { setTimeout(() => showOffline(o), 400); setTimeout(() => logEvent(`Без вас: +${fmt(o.people, 0)} чел., +${fmtMoney(o.money)}`), 0); }
+      }
+    }
+    if (!st) { st = L.newState(); fresh = true; }
+    applyTheme(); applyCrowd();
+    resetRiders();
+    resize();
+    fitCamera(dims(), true);
+    showTab('door');
+    updateHUD();
+    if (fresh) showIntro();
+    const checkHash = () => { if (location.hash === '#author') setAuthor(true); };
+    checkHash(); window.addEventListener('hashchange', checkHash);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { readColors(); });
+    window.claude?.hot?.snapshot?.(() => ({ save: L.serialize(st) }));
+    // отладочный доступ для тестов
+    window.__krug = { get st() { return st; }, L, V, save, cam };
+    last = performance.now();
+    requestAnimationFrame(frame);
+  }
+  if (window.claude?.hot?.ready) window.claude.hot.ready(start); else start(window.claude?.hot?.data ?? {});
+  void lsDel;
+})();
+
+</script>
+</body>
+</html>

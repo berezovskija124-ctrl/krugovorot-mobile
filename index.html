@@ -288,6 +288,62 @@ body.m .card { padding: 18px 16px 16px; max-height: calc(100% - 12px); }
 body.m .card h1 { font-size: 24px; }
 body.m .modal { padding: 8px; }
 html, body { overscroll-behavior: none; }
+/* ---------- прокачка на телефоне: карточки ---------- */
+.ucard { border: 1.5px solid var(--ink); background: var(--panel); padding: 12px; display: grid; gap: 9px; position: relative; }
+.ucard.rec { box-shadow: 4px 4px 0 var(--ink); border-width: 2px; }
+.ucard.locked { border-style: dashed; border-color: var(--ink-2); }
+.ucard.locked .uicon, .ucard.locked .utitle { opacity: .55; }
+.ucard.maxed { border-color: var(--rule); }
+.uhead { display: flex; align-items: center; gap: 11px; }
+.uicon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border: 1.5px solid var(--ink); background: var(--paper); }
+.ucard.rec .uicon { background: var(--ink); color: var(--panel); }
+.utt { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.utitle { font-weight: 700; font-size: 16px; line-height: 1.2; }
+.ulv { font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); }
+.ubadge { flex: none; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; background: var(--ink); color: var(--panel); padding: 4px 7px; }
+.ulvbar { position: relative; height: 6px; background: var(--ghost); border: 1px solid var(--rule); }
+.ulvbar i { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+.ulvbar b { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+.ubig { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.ubig .now { font-size: 17px; color: var(--ink-2); }
+.ubig .arr { font-size: 15px; color: var(--ink-2); }
+.ubig .nxt { font-size: 22px; font-weight: 600; }
+.ubig small { font-family: var(--f-body); font-size: 12.5px; color: var(--ink-2); flex-basis: 100%; }
+.udesc { font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.udesc b { color: var(--ink); }
+.ubuy { position: relative; overflow: hidden; min-height: 50px; border: 1.5px solid var(--ink); background: var(--ink); color: var(--panel); display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 0 14px; font-size: 14px; font-weight: 700; touch-action: manipulation; }
+.ubuy span { position: relative; }
+.ubuy .r { font-family: var(--f-mono); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ubuy i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--ghost); }
+.ubuy:disabled { background: transparent; color: var(--ink-2); border-style: dashed; cursor: default; }
+.ubuy:disabled i { background: repeating-linear-gradient(-45deg, var(--rule) 0 4px, transparent 4px 8px); }
+.ubuy:not(:disabled):active { transform: translate(1px, 1px); }
+.ucard.locked .ubuy, .ucard.maxed .ubuy { justify-content: center; font-weight: 600; font-size: 13px; }
+.usub { font-size: 12px; color: var(--ink-2); font-family: var(--f-mono); }
+.usub:empty { display: none; }
+.quick { display: grid; gap: 7px; }
+.qhead { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.qlist { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-inline: -14px; padding-inline: 14px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+.qlist:empty { display: none; }
+.qchip { flex: none; scroll-snap-align: start; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; gap: 2px 8px; align-items: center; text-align: left; min-width: 150px; max-width: 200px; padding: 9px 11px; border: 1.5px solid var(--ink); background: var(--paper); touch-action: manipulation; }
+.qchip .qi { grid-row: 1 / span 2; display: grid; place-items: center; }
+.qchip .qt { display: grid; min-width: 0; }
+.qchip .qt b { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qchip .qt small { font-size: 11px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qchip .qc { grid-column: 2; font-family: var(--f-mono); font-size: 12.5px; font-weight: 600; }
+.qchip.rec { background: var(--ink); color: var(--panel); }
+.qchip.rec .qt small { color: inherit; opacity: .8; }
+.vline { font-size: 13px; line-height: 1.45; border-left: 3px solid var(--ink); padding: 6px 10px; background: var(--ghost); }
+details.mored { border: 1px solid var(--rule); }
+details.mored summary { cursor: pointer; padding: 11px 12px; font-size: 13px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+details.mored summary::-webkit-details-marker { display: none; }
+details.mored summary::after { content: "+"; font-family: var(--f-mono); }
+details.mored[open] summary::after { content: "−"; }
+details.mored .mbody { display: grid; gap: 10px; padding: 0 12px 12px; }
+body.m .body { gap: 12px; padding-top: 12px; }
+body.m .sect { font-size: 11px; padding-top: 8px; }
+body.m.sheet-full #pushbtn, body.m.sheet-full .humanity { display: none; }
+body.m.sheet-full .alert { bottom: auto; top: max(8px, env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); }
 @media (min-width: 761px) and (max-width: 1180px) {
   .humanity { top: auto; bottom: max(16px, env(safe-area-inset-bottom, 0px)); left: auto; right: 408px; transform: none; width: 300px; min-width: 0; }
   .hint { max-width: calc(100% - 760px); }
@@ -2162,7 +2218,7 @@ if (typeof module !== 'undefined') module.exports = Logic;
   function updateHUD() {
     const r = st.run, author = L.isFree(st);
     setText(hud.money, author ? '₽ ∞' : fmtMoney(r.money));
-    const pr = r.rate.profit;
+    const pr = Math.abs(r.rate.profit) < 0.5 ? 0 : r.rate.profit;
     setText(hud.rate, (pr >= 0 ? '+' : '') + fmtMoney(pr) + '/с прибыли' + (author ? ' (настоящей)' : ''));
     setText(hud.adm, fmt(r.admittedRun, 0));
     setText(hud.q, fmt(r.Q, 0));
@@ -2228,17 +2284,73 @@ if (typeof module !== 'undefined') module.exports = Logic;
     p.appendChild(box_);
     rows.push(() => { for (const [b, f] of bs) setText(b, f()); });
   }
+  // ---------------- иконки улучшений (1-битные, под цвет текста) ----------------
+  const svg = d => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICONS = {
+    size: svg('<circle cx="12" cy="12" r="4"/><path d="M2 12h5M17 12h5M5 9l-3 3 3 3M19 9l3 3-3 3"/>'),
+    blades: svg('<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>'),
+    shape: svg('<circle cx="12" cy="12" r="9"/><path d="M12 12c0-5 4-7 7-6M12 12c-5 0-7 4-6 7M12 12c0 5-4 7-7 6M12 12c5 0 7-4 6-7"/>'),
+    motor: svg('<path d="M13 2 5 14h6l-1 8 8-12h-6z"/>'),
+    gears: svg('<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>'),
+    fly: svg('<ellipse cx="12" cy="10" rx="9" ry="4"/><path d="M3 10v4c0 2.2 4 4 9 4s9-1.8 9-4v-4"/>'),
+    crew: svg('<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>'),
+    ads: svg('<path d="M3 10v4h4l7 5V5L7 10z"/><path d="M18 9a4 4 0 0 1 0 6"/>'),
+    fee: svg('<path d="M3 7h18v4a2 2 0 0 0 0 4v4H3v-4a2 2 0 0 0 0-4z"/><path d="M9 8v2M9 12v2M9 16v2"/>'),
+    bus: svg('<rect x="4" y="4" width="16" height="13" rx="2"/><path d="M4 11h16M8 17v3M16 17v3"/>'),
+    metro: svg('<path d="M4 19 8 5l4 8 4-8 4 14"/>'),
+    train: svg('<rect x="6" y="3" width="12" height="14" rx="3"/><path d="M6 11h12M8 21l2-4M16 21l-2-4"/>'),
+    plane: svg('<path d="M21 12 3 5l3 7-3 7z"/><path d="M6 12h15"/>'),
+    stage: svg('<path d="M4 21V8l8-5 8 5v13M9 21v-6h6v6"/>'),
+    star: svg('<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'),
+    dot: svg('<circle cx="12" cy="12" r="5"/>'),
+  };
+  function eta(sec) {
+    if (!isFinite(sec) || sec < 0) return '';
+    if (sec < 60) return `≈ ${Math.max(1, Math.ceil(sec))} с`;
+    if (sec < 3600) return `≈ ${Math.ceil(sec / 60)} мин`;
+    return `≈ ${(sec / 3600).toFixed(1).replace('.', ',')} ч`;
+  }
+
+  // ---------------- совет: какое улучшение сейчас полезнее всего ----------------
+  let recId = null;
+  function costOf(id) {
+    const r = st.run;
+    if (id === 'blades') return L.bladeLocked(st) ? null : L.bladeCost(st);
+    if (id === 'shape') return L.shapeLocked(st) ? null : L.SHAPES[r.shape + 1].cost;
+    if (id === 'stage') return isFinite(L.stageCost(st)) ? L.stageCost(st) : null;
+    const max = L.upMax(st, id); return max && r.lv[id] < max ? L.upCost(st, id) : null;
+  }
+  function recommendId() {
+    const r = st.run, D = L.derived(st);
+    if (r.broken || r.repairT > 0) return null;
+    const cheapest = ids => { let b = null; for (const id of ids) { const c = costOf(id); if (c != null && (!b || c < b.c)) b = { id, c }; } return b && b.id; };
+    if (r.lv.motor === 0) return 'motor';
+    if (D.motorMax < D.ws * 0.95 && costOf('motor') != null) return 'motor';
+    if (r.lv.crew === 0 && r.stage >= 1 && costOf('crew') != null) return 'crew';
+    const w = Math.max(Math.abs(r.omega), D.motorTarget), T = L.throughput(D, w), A = D.arrivals;
+    let id = null;
+    if (T < A * 0.8) id = cheapest(['size', 'blades', 'shape']);
+    else if (A < T * 0.8) id = cheapest(['ads', ...L.TRANS.map(t => t.id)]);
+    else id = cheapest(['fee', 'size', 'ads']);
+    if (!id && costOf('stage') != null) id = 'stage';
+    return id;
+  }
+
+  // ---------------- строка улучшения (ПК) и карточка (телефон) ----------------
+  function doBuy(o) {
+    Snd.init();
+    const evs = [];
+    if (o.buy(evs)) { sfx('buy'); buzz(10); handleEvents(evs, dims()); refreshPanel(); updateHUD(); return true; }
+    sfx('deny'); return false;
+  }
   function upRow(p, o) {
+    if (isMobile()) return upCard(p, o);
     const r = el('div', 'up');
     const t = el('div', 'up-title'); const tn = el('span', null, o.title); const lv = el('span', 'lvl'); t.append(tn, lv);
     const e = el('div', 'up-eff');
     const b = el('button', 'buy'); const bc = el('span', 'c'); const bn = el('span', 'n'); b.append(bc, bn);
     r.append(t, e, b); p.appendChild(r);
-    b.addEventListener('click', () => {
-      Snd.init();
-      const evs = [];
-      if (o.buy(evs)) { sfx('buy'); handleEvents(evs, dims()); refreshPanel(); updateHUD(); } else sfx('deny');
-    });
+    b.addEventListener('click', () => doBuy(o));
     rows.push(() => {
       setText(lv, o.lvl ? o.lvl() : '');
       const eh = o.eff(); if (e._h !== eh) { e.innerHTML = eh; e._h = eh; }
@@ -2249,14 +2361,71 @@ if (typeof module !== 'undefined') module.exports = Logic;
       else { setText(bc, L.isFree(st) && o.free !== false ? 'бесплатно' : o.cost()); setText(bn, o.n ? o.n() : 'купить'); b.disabled = !o.can(); }
     });
   }
+  function upCard(p, o) {
+    const c = el('div', 'ucard');
+    const head = el('div', 'uhead');
+    const ic = el('div', 'uicon', ICONS[o.icon] || ICONS.dot);
+    const tt = el('div', 'utt'); const tn = el('div', 'utitle', o.title); const tl = el('div', 'ulv'); tt.append(tn, tl);
+    const badge = el('span', 'ubadge', 'Совет'); badge.hidden = true;
+    head.append(ic, tt, badge);
+    const lvb = el('div', 'ulvbar'); const lvf = el('i'); const lvc = el('b'); lvb.append(lvf, lvc);
+    const big = el('div', 'ubig');
+    const desc = el('div', 'udesc');
+    const btn = el('button', 'ubuy'); const bp = el('i'); const bl = el('span', 'l'); const br = el('span', 'r'); btn.append(bp, bl, br);
+    const sub = el('div', 'usub');
+    c.append(head, lvb, big, desc, btn, sub);
+    p.appendChild(c);
+    btn.addEventListener('click', () => doBuy(o));
+    rows.push(() => {
+      setText(tl, o.lvl ? o.lvl() : '');
+      const info = o.lvInfo ? o.lvInfo() : null;
+      lvb.hidden = !info;
+      if (info) {
+        lvf.style.width = Math.min(100, info.lv / info.max * 100) + '%';
+        lvc.hidden = info.cap >= info.max; lvc.style.left = Math.min(100, info.cap / info.max * 100) + '%';
+      }
+      const lock = o.locked ? o.locked() : null;
+      const maxed = lock === 'максимум' || lock === 'взят';
+      const bg = !maxed && o.big ? o.big() : null;
+      const bh = bg ? `<span class="now">${bg[0]}</span><span class="arr">→</span><span class="nxt">${bg[1]}</span><small>${bg[2]}</small>` : '';
+      big.hidden = !bg; if (big._h !== bh) { big.innerHTML = bh; big._h = bh; }
+      const dh = o.desc ? o.desc() : o.eff(); if (desc._h !== dh) { desc.innerHTML = dh; desc._h = dh; }
+      c.classList.toggle('locked', !!lock && !maxed);
+      c.classList.toggle('maxed', maxed);
+      const rec = !lock && o.rid && o.rid === recId;
+      c.classList.toggle('rec', !!rec); badge.hidden = !rec;
+      if (lock) {
+        btn.disabled = true; setText(bl, maxed ? 'Максимум' : lock.replace('нужен: ', 'Откроется: ').replace('предел здания, нужен: ', 'Дальше — после переезда: ')); setText(br, '');
+        bp.style.width = '0'; setText(sub, ''); return;
+      }
+      const free = L.isFree(st) && o.free !== false;
+      const can = o.can();
+      btn.disabled = !can;
+      setText(bl, (o.n ? o.n() : 'Купить'));
+      setText(br, free ? 'бесплатно' : o.cost());
+      const price = o.price ? o.price() : null;
+      if (!can && price != null && !free && isFinite(price)) {
+        const m = st.run.money; bp.style.width = Math.min(100, m / price * 100) + '%';
+        const pr = st.run.rate.profit;
+        setText(sub, `Не хватает ${fmtMoney(price - m)}` + (pr > 0 ? ` · накопится ${eta((price - m) / pr)}` : ' · сейчас нет прибыли'));
+      } else if (!can && o.short) { bp.style.width = '0'; setText(sub, o.short()); }
+      else { bp.style.width = can ? '100%' : '0'; setText(sub, ''); }
+    });
+  }
   function buyN() { return st.settings.buy === 'max' ? 'max' : +st.settings.buy; }
-  function geoRow(p, id, title, effFn) {
+  const maxAll = id => L.UP[id].max({ run: { stage: L.STAGES.length - 1 } });
+  function geoRow(p, id, title, effFn, x) {
+    x = x || {};
     upRow(p, {
-      title,
-      lvl: () => `ур. ${st.run.lv[id]}/${L.UP[id].max({ run: { stage: L.STAGES.length - 1 } })}`,
+      title, icon: x.icon || id, rid: id,
+      lvl: () => `ур. ${st.run.lv[id]} из ${maxAll(id)}`,
+      lvInfo: () => ({ lv: st.run.lv[id], max: maxAll(id), cap: L.upMax(st, id) }),
       eff: () => effFn(L.upQuote(st, id, buyN()).cnt || 1),
+      big: x.big ? () => x.big(L.upQuote(st, id, buyN()).cnt || 1) : null,
+      desc: x.desc ? () => (typeof x.desc === 'function' ? x.desc() : x.desc) : null,
+      price: () => L.upQuote(st, id, buyN()).total,
       cost: () => { const q = L.upQuote(st, id, buyN()); return q.cnt ? fmtMoney(q.total) : '—'; },
-      n: () => { const q = L.upQuote(st, id, buyN()); return q.cnt ? `+${q.cnt} ур.` : ''; },
+      n: () => { const q = L.upQuote(st, id, buyN()); return q.cnt ? (isMobile() ? `Купить +${q.cnt} ур.` : `+${q.cnt} ур.`) : ''; },
       can: () => { const q = L.upQuote(st, id, buyN()); return q.cnt > 0 && L.afford(st, q.total); },
       locked: () => {
         const max = L.upMax(st, id);
@@ -2273,8 +2442,64 @@ if (typeof module !== 'undefined') module.exports = Logic;
   const rpm = w => Math.round(w * 60 / TAU);
   const stageLock = l => (l === 'max' ? 'максимум' : l ? `нужен: ${L.STAGES[l].name}` : null);
   const pct = x => Math.round(x * 100) + '%';
+  const xf = v => '×' + v.toFixed(1).replace('.', ',');
+
+  // ---------------- лента «Можно купить сейчас» (телефон) ----------------
+  function buyables() {
+    const out = [], r = st.run;
+    const geo = (id, name, icon) => {
+      const max = L.upMax(st, id); if (!max || r.lv[id] >= max) return;
+      const c = L.upCost(st, id);
+      out.push({ id, name, icon: icon || id, sub: `ур. ${r.lv[id]} → ${r.lv[id] + 1}`, cost: c, can: L.afford(st, c), buy: evs => L.buyUp(st, id, 1, evs) });
+    };
+    geo('size', 'Шире дверь'); geo('motor', 'Автопривод'); geo('gears', 'Шестерни'); geo('fly', 'Маховик'); geo('crew', 'Бригада');
+    geo('ads', 'Реклама'); geo('fee', 'Плата за вход');
+    for (const t of L.TRANS) geo(t.id, t.name);
+    if (!L.bladeLocked(st)) { const c = L.bladeCost(st); out.push({ id: 'blades', name: 'Лопасть', icon: 'blades', sub: `${r.blades} → ${r.blades + 1} шт.`, cost: c, can: L.afford(st, c), buy: evs => L.buyBlade(st, evs) }); }
+    if (!L.shapeLocked(st)) { const n = L.SHAPES[r.shape + 1]; out.push({ id: 'shape', name: n.name, icon: 'shape', sub: 'новые лопасти', cost: n.cost, can: L.afford(st, n.cost), buy: evs => L.buyShape(st, evs) }); }
+    if (isFinite(L.stageCost(st))) { const c = L.stageCost(st); out.push({ id: 'stage', name: 'Переезд', icon: 'stage', sub: L.STAGES[r.stage + 1].name, cost: c, can: L.afford(st, c), buy: evs => L.buyStage(st, evs) }); }
+    out.sort((a, b) => (b.id === recId) - (a.id === recId) || a.cost - b.cost);
+    return out;
+  }
+  function quickStrip(p) {
+    const wrap = el('div', 'quick'); const head = el('div', 'qhead'); const list = el('div', 'qlist');
+    wrap.append(head, list); p.appendChild(wrap);
+    rows.push(() => {
+      const items = buyables().filter(x => x.can).slice(0, 14);
+      setText(head, items.length ? `Можно купить сейчас · ${items.length}` : 'Пока ничего не по карману — копите или крутите дверь');
+      const key = items.map(x => x.id + ':' + x.sub + ':' + Math.round(Math.log10(x.cost + 1) * 10)).join('|') + (recId || '') + (L.isFree(st) ? 'F' : '');
+      if (list._k === key) return; list._k = key; list.innerHTML = '';
+      for (const it of items) {
+        const b = el('button', 'qchip' + (it.id === recId ? ' rec' : ''), `<span class="qi">${ICONS[it.icon] || ICONS.dot}</span><span class="qt"><b>${it.name}</b><small>${it.sub}</small></span><span class="qc">${L.isFree(st) ? 'даром' : fmtMoney(it.cost)}</span>`);
+        b.addEventListener('click', () => doBuy({ buy: it.buy }));
+        list.appendChild(b);
+      }
+    });
+  }
+  // короткая строка «что сейчас главное» (телефон)
+  function verdictLine(p) {
+    const v = el('div', 'vline'); p.appendChild(v);
+    rows.push(() => { const h = verdictHTML(); if (v._h !== h) { v.innerHTML = h; v._h = h; } });
+  }
+  function details(p, title, fill) {
+    const d = el('details', 'mored'); const s = el('summary', null, title); const b = el('div', 'mbody');
+    d.append(s, b); p.appendChild(d); fill(b);
+  }
 
   // приток против пропуска
+  function verdictHTML() {
+    const D = L.derived(st), r = st.run;
+    const w = Math.max(Math.abs(r.omega), D.motorTarget);
+    const A = D.arrivals, T = L.throughput(D, w);
+    if (r.repairT > 0) return 'Дверь на <b>ремонте</b> и не крутится. Скоро продолжит.';
+    if (r.broken) return 'Дверь <b>сломана</b>: пропускает крохи. Нужен аварийный ремонт.';
+    if (w < 0.05) return isMobile() ? 'Дверь стоит. Держите кнопку «Крутить» или купите <b>автопривод</b>.' : 'Дверь стоит. Рисуйте круги мышью вокруг двери, жмите пробел — или купите <b>автопривод</b>.';
+    if (Math.abs(r.omega) > D.ws * 1.5) return 'Дверь крутится <b>слишком быстро</b>: людей отбрасывает. Это копит комбо, но впускает меньше и изнашивает дверь.';
+    if (T < A * 0.8 && r.lv.size >= maxAll('size') && r.blades >= 8 && r.shape >= L.SHAPES.length - 1) return 'Дверь на <b>пределе конструкции</b>: дальше помогают только перки франшизы и контракты.';
+    if (T < A * 0.8) return 'Узкое место — <b>дверь</b>: людей больше, чем она пропускает. Расширьте дверь, добавьте или замените лопасти.';
+    if (A < T * 0.8) return 'Узкое место — <b>поток людей</b>: дверь простаивает. Нужны реклама или транспорт.';
+    return 'Приток и дверь <b>в равновесии</b>. Растите их вместе.';
+  }
   function balanceBox(p) {
     const box_ = el('div', 'balance');
     const mk = label => { const row = el('div', 'bar'); const tr = el('div', 'track'); const f = el('div', 'fill'); tr.appendChild(f); const v = el('b'); row.append(el('span', null, label), tr, v); box_.appendChild(row); return [f, v]; };
@@ -2289,28 +2514,20 @@ if (typeof module !== 'undefined') module.exports = Logic;
       const m = Math.max(A, T, I, 1e-9);
       fA.style.width = (A / m * 100) + '%'; fT.style.width = (T / m * 100) + '%'; fI.style.width = Math.min(100, I / m * 100) + '%';
       setText(vA, fmt(A) + '/с'); setText(vT, fmt(T) + '/с'); setText(vI, fmt(I) + '/с');
-      let h;
-      if (r.repairT > 0) h = 'Дверь на <b>ремонте</b> и не крутится. Скоро продолжит.';
-      else if (r.broken) h = 'Дверь <b>сломана</b>: пропускает крохи. Нужен аварийный ремонт — кнопка выше на вкладке «Дверь».';
-      else if (w < 0.05) h = 'Дверь стоит. Рисуйте круги мышью вокруг двери, жмите пробел — или купите <b>автопривод</b>.';
-      else if (Math.abs(r.omega) > D.ws * 1.5) h = 'Дверь крутится <b>слишком быстро</b>: людей отбрасывает. Это копит комбо, но впускает меньше и изнашивает дверь.';
-      else if (T < A * 0.8 && r.lv.size >= L.UP.size.max({ run: { stage: L.STAGES.length - 1 } }) && r.blades >= 8 && r.shape >= L.SHAPES.length - 1) h = 'Дверь на <b>пределе конструкции</b>: больше она не пропустит. Ускорить могут только перки франшизы («Инженерное бюро», «Бывалые посетители») и контракты.';
-      else if (T < A * 0.8) h = 'Узкое место — <b>дверь</b>: очередь растёт, часть людей уходит. Расширьте дверь, добавьте лопасти или замените их.';
-      else if (A < T * 0.8) h = 'Узкое место — <b>поток людей</b>: дверь простаивает. Реклама или транспорт во вкладке «Поток».';
-      else h = 'Приток и дверь <b>в равновесии</b>. Растите их вместе.';
+      const h = verdictHTML();
       if (vd._h !== h) { vd.innerHTML = h; vd._h = h; }
     });
   }
 
-  function buildDoor(p) {
+  function doorReadout(p) {
     readout(p, [
       ['Обороты', () => `${rpm(Math.abs(st.run.omega))} об/мин`],
       ['Успевают войти', () => pct(L.eff(Math.abs(st.run.omega), L.derived(st).ws))],
       ['Отсек вмещает', () => fmt(L.derived(st).cap) + ' чел.'],
       ['Состояние', () => pct(st.run.cond)],
     ]);
-    balanceBox(p);
-    // привод
+  }
+  function driveCtl(p) {
     const ctl = el('div', 'ctl');
     const dr = el('div', 'drive'); ctl.appendChild(dr);
     const fwRow = el('div', 'bar fw'); const fwTr = el('div', 'track'); const fwF = el('div', 'fill'); fwTr.appendChild(fwF); const fwV = el('b');
@@ -2336,8 +2553,8 @@ if (typeof module !== 'undefined') module.exports = Logic;
       setText(rl, r.lv.motor ? `Автопривод: ${rpm(D.motorTarget)} об/мин` : 'Автопривода пока нет');
       setText(rv, r.lv.motor ? `оптимум ${rpm(D.ws)} · предел ${rpm(D.motorMax)}` : '');
     });
-    // состояние и ремонт
-    sect(p, 'Состояние двери');
+  }
+  function repairBlock(p) {
     const rb = el('div', 'repair'); p.appendChild(rb);
     const rs = el('div', 'rstate'); const rbar = el('div', 'track'); const rfill = el('div', 'fill'); rbar.appendChild(rfill);
     const rtxt = el('div', 'note'); const rbtn = el('button', 'bigbtn'); rbtn.id = 'repair-btn';
@@ -2360,7 +2577,7 @@ if (typeof module !== 'undefined') module.exports = Logic;
         const risk = L.breakRisk(st);
         state = `Исправна · износ ${Math.round((1 - r.cond) * 100)}%` + (risk > 0 ? ` · риск поломки ${(risk * 100).toFixed(1).replace('.', ',')}%/с` : '');
         rfill.style.width = Math.round(r.cond * 100) + '%';
-        h = 'Износ растёт с квадратом скорости. Ниже 50% дверь может сломаться в любой момент. Плановый ремонт дешевле и быстрее, но дверь на это время встаёт.';
+        h = isMobile() ? 'Ниже 50% дверь может сломаться. Плановый ремонт дешевле и быстрее, но дверь на это время встаёт.' : 'Износ растёт с квадратом скорости. Ниже 50% дверь может сломаться в любой момент. Плановый ремонт дешевле и быстрее, но дверь на это время встаёт.';
         bt = r.cond >= 0.999 ? 'Дверь как новая' : `Плановый ремонт · ${fmtMoney(cost)} · ${Math.ceil(tm)} с`; dis = r.cond >= 0.999 || !L.afford(st, cost);
       }
       setText(rs, state); setText(rtxt, h);
@@ -2368,11 +2585,8 @@ if (typeof module !== 'undefined') module.exports = Logic;
       setText(rbtn, bt); rbtn.disabled = dis;
       rb.classList.toggle('bad', r.broken); rb.classList.toggle('risk', !r.broken && r.cond < 0.5);
     });
-    geoRow(p, 'crew', 'Сервисная бригада', n => {
-      const lv = st.run.lv.crew;
-      return lv ? `Ремонт быстрее на ${15 * lv}% → <b>${15 * (lv + n)}%</b>, дешевле на ${10 * lv}% → <b>${10 * (lv + n)}%</b>, износ −${8 * lv}% → <b>−${8 * (lv + n)}%</b>.`
-        : 'Бригада сама чинит дверь при износе 40%, до поломки. Каждый уровень: ремонт быстрее на 15% и дешевле на 10%, износ −8%.';
-    });
+  }
+  function autoRepairCheck(p) {
     const arl = el('label', 'check slim'); const arc = el('input'); arc.type = 'checkbox'; arc.id = 'auto-repair';
     const arspan = el('span'); arl.append(arc, arspan);
     arc.addEventListener('change', () => { st.settings.autoRepair = arc.checked; });
@@ -2382,29 +2596,43 @@ if (typeof module !== 'undefined') module.exports = Logic;
       arc.disabled = !has; arc.checked = has && !!st.settings.autoRepair;
       setText(arspan, has ? 'Бригада чинит сама, когда износ больше 40% или дверь сломалась' : 'Автоматический ремонт — после найма сервисной бригады');
     });
+  }
 
-    sect(p, 'Улучшения двери');
-    geoRow(p, 'size', 'Расширение двери', n => { const D = L.derived(st); return `Шире отсеки — больше людей за раз: <b>${fmt(D.capFull)}</b> → <b>${fmt(D.capFull * Math.pow(L.SIZE_G, n))}</b> чел. в отсеке.`; });
+  // ---------------- улучшения двери ----------------
+  function doorUpgrades(p) {
+    const M = isMobile();
+    sect(p, M ? 'Дверь — сколько людей за оборот' : 'Улучшения двери');
+    geoRow(p, 'size', 'Расширение двери',
+      n => { const D = L.derived(st); return `Шире отсеки — больше людей за раз: <b>${fmt(D.capFull)}</b> → <b>${fmt(D.capFull * Math.pow(L.SIZE_G, n))}</b> чел. в отсеке.`; },
+      { big: n => { const D = L.derived(st); return [fmt(D.capFull), fmt(D.capFull * Math.pow(L.SIZE_G, n)), 'чел. в отсеке']; }, desc: 'Шире отсеки — за один заход входит больше людей.' });
     upRow(p, {
-      title: 'Число лопастей', lvl: () => `${st.run.blades} шт.`,
+      title: 'Число лопастей', icon: 'blades', rid: 'blades', lvl: () => `${st.run.blades} из 8 шт.`,
+      lvInfo: () => ({ lv: st.run.blades - 2, max: 6, cap: Math.max(0, [2, 3, 4, 5, 6, 7, 8].filter((n, i) => L.BLADE_STAGE[n] <= st.run.stage).pop() - 2) }),
       eff: () => st.run.blades >= 8 ? 'Восемь лопастей — предел конструкции.' : `Больше отсеков — люди заполняют их плотнее: заполнение ${pct(L.FILL[st.run.blades])} → <b>${pct(L.FILL[st.run.blades + 1])}</b>.`,
-      cost: () => fmtMoney(L.bladeCost(st)), n: () => 'поставить', can: () => L.afford(st, L.bladeCost(st)),
+      big: () => (st.run.blades >= 8 ? null : [pct(L.FILL[st.run.blades]), pct(L.FILL[st.run.blades + 1]), 'заполнение отсеков']),
+      desc: () => 'Больше отсеков — люди заполняют их плотнее.',
+      price: () => L.bladeCost(st),
+      cost: () => fmtMoney(L.bladeCost(st)), n: () => (M ? 'Поставить лопасть' : 'поставить'), can: () => L.afford(st, L.bladeCost(st)),
       locked: () => stageLock(L.bladeLocked(st)),
       buy: evs => L.buyBlade(st, evs),
     });
     upRow(p, {
-      title: 'Замена лопастей', lvl: () => L.SHAPES[st.run.shape].name,
+      title: 'Замена лопастей', icon: 'shape', rid: 'shape', lvl: () => `${L.SHAPES[st.run.shape].name} · ${st.run.shape + 1} из ${L.SHAPES.length}`,
+      lvInfo: () => ({ lv: st.run.shape, max: L.SHAPES.length - 1, cap: Math.max(...L.SHAPES.map((s, i) => (s.stage <= st.run.stage ? i : 0))) }),
       eff: () => {
         const n = L.SHAPES[st.run.shape + 1]; if (!n) return 'Турбина — совершеннее лопастей не бывает.';
         const c = L.SHAPES[st.run.shape];
         return `<b>${n.name}</b>: ${n.d} Оптимум <b>${rpm(c.ws)}</b> → <b>${rpm(n.ws)}</b> об/мин, плотность ×${(n.k / c.k).toFixed(2).replace('.', ',')}.`;
       },
-      cost: () => { const n = L.SHAPES[st.run.shape + 1]; return n ? fmtMoney(n.cost) : '—'; }, n: () => 'заменить',
+      big: () => { const n = L.SHAPES[st.run.shape + 1]; if (!n) return null; return [String(rpm(L.SHAPES[st.run.shape].ws)), String(rpm(n.ws)), 'об/мин без потерь']; },
+      desc: () => { const n = L.SHAPES[st.run.shape + 1]; return n ? `<b>${n.name}</b>. ${n.d} Дверь можно крутить быстрее — люди всё равно успевают войти.` : 'Турбина — совершеннее лопастей не бывает.'; },
+      price: () => { const n = L.SHAPES[st.run.shape + 1]; return n ? n.cost : null; },
+      cost: () => { const n = L.SHAPES[st.run.shape + 1]; return n ? fmtMoney(n.cost) : '—'; }, n: () => (M ? 'Заменить лопасти' : 'заменить'),
       can: () => { const n = L.SHAPES[st.run.shape + 1]; return !!n && L.afford(st, n.cost); },
       locked: () => stageLock(L.shapeLocked(st)),
       buy: evs => L.buyShape(st, evs),
     });
-    sect(p, 'Привод');
+    sect(p, M ? 'Привод — кто и как быстро крутит' : 'Привод');
     geoRow(p, 'motor', 'Автопривод', n => {
       const D = L.derived(st), lv = st.run.lv.motor;
       if (!lv) return 'Электромотор крутит дверь сам — и когда игра закрыта. Платите за электричество.';
@@ -2412,33 +2640,77 @@ if (typeof module !== 'undefined') module.exports = Logic;
       const next = Math.min(L.MAX_OMEGA, D.motorMax * Math.pow(1.18, n));
       const nt = D.motorMax >= D.ws ? ' Оптимум уже достигнут — сначала замените лопасти.' : '';
       return `Предел оборотов <b>${rpm(D.motorMax)}</b> → <b>${rpm(next)}</b> об/мин.${nt}`;
+    }, {
+      big: n => { const D = L.derived(st); const next = Math.min(L.MAX_OMEGA, (D.motorMax || 0.9 / 1.18) * Math.pow(1.18, n)); return [st.run.lv.motor ? String(rpm(D.motorMax)) : '0', String(rpm(next)), 'об/мин мотора']; },
+      desc: () => { const D = L.derived(st); if (!st.run.lv.motor) return 'Крутит дверь без вас — и когда игра закрыта. Платите за электричество.'; return D.motorMax >= D.ws ? `Мотор уже держит оптимум ${rpm(D.ws)} об/мин — выгоднее сначала заменить лопасти.` : `Нужно ${rpm(D.ws)} об/мин, чтобы дверь работала в полную силу.`; },
     });
-    geoRow(p, 'gears', 'Шестерни', n => { const D = L.derived(st); return `Рука крутит дверь быстрее и сильнее заряжает маховик: передача ×${D.handRatio.toFixed(1).replace('.', ',')} → <b>×${(D.handRatio + 0.2 * n).toFixed(1).replace('.', ',')}</b>.`; });
+    geoRow(p, 'gears', 'Шестерни', n => { const D = L.derived(st); return `Рука крутит дверь быстрее и сильнее заряжает маховик: передача ${xf(D.handRatio)} → <b>${xf(D.handRatio + 0.2 * n)}</b>.`; },
+      { big: n => { const D = L.derived(st); return [xf(D.handRatio), xf(D.handRatio + 0.2 * n), 'сила руки']; }, desc: 'Ваши круги пальцем или мышью крутят дверь быстрее и сильнее заряжают маховик.' });
     geoRow(p, 'fly', 'Маховик', n => {
       const lv = st.run.lv.fly, cap = l => 4 + 8 * (Math.pow(1.3, l) - 1);
       return `Копит силу руки: запас <b>${Math.round(cap(lv))}</b> → <b>${Math.round(cap(lv + n))}</b> с на оптимуме. Ещё снижает трение на 10% за уровень.`;
+    }, { big: n => { const lv = st.run.lv.fly, cap = l => 4 + 8 * (Math.pow(1.3, l) - 1); return [Math.round(cap(lv)) + ' с', Math.round(cap(lv + n)) + ' с', 'запас хода']; }, desc: 'Копит силу руки и сам крутит дверь, пока не разрядится. Меньше трения — дешевле электричество.' });
+  }
+
+  function buildDoor(p) {
+    const M = isMobile();
+    if (M) { quickStrip(p); verdictLine(p); }
+    else { doorReadout(p); balanceBox(p); driveCtl(p); sect(p, 'Состояние двери'); repairBlock(p); }
+    doorUpgrades(p);
+    sect(p, M ? 'Обслуживание — чтобы дверь не ломалась' : 'Обслуживание');
+    if (M) repairBlock(p);
+    geoRow(p, 'crew', 'Сервисная бригада', n => {
+      const lv = st.run.lv.crew;
+      return lv ? `Ремонт быстрее на ${15 * lv}% → <b>${15 * (lv + n)}%</b>, дешевле на ${10 * lv}% → <b>${10 * (lv + n)}%</b>, износ −${8 * lv}% → <b>−${8 * (lv + n)}%</b>.`
+        : 'Бригада сама чинит дверь при износе 40%, до поломки. Каждый уровень: ремонт быстрее на 15% и дешевле на 10%, износ −8%.';
+    }, {
+      big: n => { const lv = st.run.lv.crew; return [lv ? `−${15 * lv}%` : 'нет', `−${15 * (lv + n)}%`, 'время ремонта']; },
+      desc: () => st.run.lv.crew ? 'Чинит дверь сама до поломки. Каждый уровень — ремонт быстрее и дешевле, износ меньше.' : 'Наймите — и бригада сама будет чинить дверь при износе 40%, не дожидаясь поломки.',
     });
+    autoRepairCheck(p);
+    if (M) details(p, 'Показатели и настройки привода', b => { doorReadout(b); balanceBox(b); driveCtl(b); });
   }
   function buildFlow(p) {
-    readout(p, [
-      ['Приходят', () => fmt(L.derived(st).arrivals) + '/с'],
-      ['Ждут в очереди', () => fmt(st.run.Q, 0) + ' чел.'],
-      ['Теряют терпение', () => fmt(st.run.Q * L.LEAVE_RATE) + '/с'],
-      ['Отброшено', () => fmt(st.run.rate.fl) + '/с'],
-    ]);
-    balanceBox(p);
-    note(p, 'Каждую секунду 3,5% очереди уходит. Отброшенные дверью встают и возвращаются в очередь.');
-    sect(p, 'Реклама');
-    geoRow(p, 'ads', 'Реклама', n => { const D = L.derived(st); return `Пешеходов с улицы <b>${fmt(D.walk)}</b> → <b>${fmt(D.walk * Math.pow(L.ADS_G, n))}</b> в секунду.`; });
-    sect(p, 'Групповой вход');
-    note(p, 'Транспорт привозит людей группами. Каждый уровень — ещё маршруты.');
+    const M = isMobile();
+    if (M) { quickStrip(p); verdictLine(p); }
+    else {
+      readout(p, [
+        ['Приходят', () => fmt(L.derived(st).arrivals) + '/с'],
+        ['Ждут в очереди', () => fmt(st.run.Q, 0) + ' чел.'],
+        ['Теряют терпение', () => fmt(st.run.Q * L.LEAVE_RATE) + '/с'],
+        ['Отброшено', () => fmt(st.run.rate.fl) + '/с'],
+      ]);
+      balanceBox(p);
+      note(p, 'Каждую секунду 3,5% очереди уходит. Отброшенные дверью встают и возвращаются в очередь.');
+    }
+    sect(p, M ? 'Реклама — люди с улицы' : 'Реклама');
+    geoRow(p, 'ads', 'Реклама', n => { const D = L.derived(st); return `Пешеходов с улицы <b>${fmt(D.walk)}</b> → <b>${fmt(D.walk * Math.pow(L.ADS_G, n))}</b> в секунду.`; },
+      { big: n => { const D = L.derived(st); return [fmt(D.walk), fmt(D.walk * Math.pow(L.ADS_G, n)), 'пешеходов в секунду']; }, desc: 'Больше людей узнаёт о вас и приходит к двери.' });
+    sect(p, M ? 'Групповой вход — транспорт' : 'Групповой вход');
+    if (!M) note(p, 'Транспорт привозит людей группами. Каждый уровень — ещё маршруты.');
+    let lockedShown = 0; const hidden = [];
     for (const t of L.TRANS) {
+      if (M && L.upMax(st, t.id) === 0) { if (lockedShown++ > 0) { hidden.push(t); continue; } }
       geoRow(p, t.id, t.name, () => {
         const lv = st.run.lv[t.id], D = L.derived(st);
         const per = D.walk * Math.max(1, lv) * t.bonus * t.every;
         return `Раз в ${t.every} с приходит ${t.unit}. Уровень: +${Math.round(t.bonus * 100)}% к пешеходам.` + (lv ? ` Рейс привозит ~<b>${fmt(per, 0)}</b> чел.` : '');
+      }, {
+        big: n => { const lv = st.run.lv[t.id]; return [`+${Math.round(lv * t.bonus * 100)}%`, `+${Math.round((lv + n) * t.bonus * 100)}%`, 'к пешеходам']; },
+        desc: () => { const lv = st.run.lv[t.id], D = L.derived(st); const per = D.walk * Math.max(1, lv) * t.bonus * t.every; return `Раз в ${t.every} с приезжает ${t.unit}` + (lv ? ` и привозит ~<b>${fmt(per, 0)}</b> чел.` : ' с толпой людей.'); },
       });
     }
+    if (hidden.length) note(p, `Позже откроются: ${hidden.map(t => `${t.name.toLowerCase()} (${L.STAGES[t.stage].name})`).join(', ')}.`);
+    if (M) details(p, 'Показатели потока', b => {
+      readout(b, [
+        ['Приходят', () => fmt(L.derived(st).arrivals) + '/с'],
+        ['Ждут в очереди', () => fmt(st.run.Q, 0) + ' чел.'],
+        ['Теряют терпение', () => fmt(st.run.Q * L.LEAVE_RATE) + '/с'],
+        ['Отброшено', () => fmt(st.run.rate.fl) + '/с'],
+      ]);
+      balanceBox(b);
+      note(b, 'Каждую секунду 3,5% очереди уходит. Отброшенные дверью встают и возвращаются в очередь.');
+    });
   }
   function sparkline(p) {
     const c = el('canvas', 'spark'); c.height = 64; p.appendChild(c);
@@ -2456,33 +2728,41 @@ if (typeof module !== 'undefined') module.exports = Logic;
     });
   }
   function buildCash(p) {
+    const M = isMobile();
+    if (M) quickStrip(p);
     const fin = el('div', 'fin'); p.appendChild(fin);
     const lines = [
-      ['Выручка', () => st.run.rate.rev, ''],
-      ['Аренда здания', () => -st.run.rate.rent, ''],
-      ['Электричество', () => -st.run.rate.elec, ''],
-      ['Ремонт', () => -st.run.rate.rep, ''],
+      ['Выручка', () => st.run.rate.rev],
+      ['Аренда здания', () => -st.run.rate.rent],
+      ['Электричество', () => -st.run.rate.elec],
+      ['Ремонт', () => -st.run.rate.rep],
     ];
     const vals = [];
     for (const [lab] of lines) { const r = el('div', 'fin-row'); r.append(el('span', null, lab)); const b = el('b'); r.append(b); fin.append(r); vals.push(b); }
     const tot = el('div', 'fin-row total'); tot.append(el('span', null, 'Прибыль')); const tb = el('b'); tot.append(tb); fin.append(tot);
     rows.push(() => {
-      lines.forEach(([, f], i) => setText(vals[i], (f() >= 0 ? '+' : '') + fmtMoney(f()) + '/с'));
-      setText(tb, (st.run.rate.profit >= 0 ? '+' : '') + fmtMoney(st.run.rate.profit) + '/с');
-      tot.classList.toggle('neg', st.run.rate.profit < 0);
+      const z = v => (Math.abs(v) < 0.5 ? 0 : v);
+      lines.forEach(([, f], i) => { const v = z(f()); setText(vals[i], (v > 0 ? '+' : '') + fmtMoney(v) + '/с'); });
+      const pf = z(st.run.rate.profit);
+      setText(tb, (pf >= 0 ? '+' : '') + fmtMoney(pf) + '/с');
+      tot.classList.toggle('neg', pf < 0);
     });
+    sect(p, M ? 'Цена — сколько платит каждый' : 'Цены');
+    geoRow(p, 'fee', 'Плата за вход', n => { const D = L.derived(st); return `С каждого вошедшего <b>${fmtMoney(D.feeBase)}</b> → <b>${fmtMoney(D.feeBase * Math.pow(L.FEE_G, n))}</b>`; },
+      { big: n => { const D = L.derived(st); return [fmtMoney(D.feeBase), fmtMoney(D.feeBase * Math.pow(L.FEE_G, n)), 'с человека']; }, desc: 'Каждый вошедший платит больше. Людей от этого меньше не становится.' });
     sect(p, 'Прибыль за 2 минуты');
     sparkline(p);
-    readout(p, [
-      ['Плата за вход', () => fmtMoney(L.derived(st).fee)],
-      ['Бонус комбо', () => `+${Math.round((L.derived(st).comboMult - 1) * 100)}%`],
-      ['Электричество на оптимуме', () => fmtMoney(L.elecAt(L.derived(st), L.derived(st).ws)) + '/с'],
-      ['Аренда', () => fmtMoney(L.derived(st).rent) + '/с'],
-    ]);
-    note(p, 'Выручка — вошедшие × плата за вход × комбо. Аренда идёт всегда. Электричество платится, только когда крутит автопривод, и растёт с квадратом скорости. Рука и маховик бесплатны.');
-    sect(p, 'Цены');
-    geoRow(p, 'fee', 'Плата за вход', n => { const D = L.derived(st); return `С каждого вошедшего <b>${fmtMoney(D.feeBase)}</b> → <b>${fmtMoney(D.feeBase * Math.pow(L.FEE_G, n))}</b>`; });
-    note(p, 'Комбо: если перекрутить дверь, людей отбрасывает. Серия отбросов подряд даёт до +50% к выручке, пока не прервётся на 2,5 с.');
+    const info = b => {
+      readout(b, [
+        ['Плата за вход', () => fmtMoney(L.derived(st).fee)],
+        ['Бонус комбо', () => `+${Math.round((L.derived(st).comboMult - 1) * 100)}%`],
+        ['Электричество на оптимуме', () => fmtMoney(L.elecAt(L.derived(st), L.derived(st).ws)) + '/с'],
+        ['Аренда', () => fmtMoney(L.derived(st).rent) + '/с'],
+      ]);
+      note(b, 'Выручка — вошедшие × плата за вход × комбо. Аренда идёт всегда. Электричество платится, только когда крутит автопривод, и растёт с квадратом скорости. Рука и маховик бесплатны.');
+      note(b, 'Комбо: если перекрутить дверь, людей отбрасывает. Серия отбросов подряд даёт до +50% к выручке, пока не прервётся на 2,5 с.');
+    };
+    if (M) details(p, 'Откуда деньги и куда уходят', info); else info(p);
   }
   function buildBuild(p) {
     const now = el('div', 'stage-now');
@@ -2498,9 +2778,13 @@ if (typeof module !== 'undefined') module.exports = Logic;
       sect(p, 'Переезд');
       const N = L.STAGES[st.run.stage + 1], S = L.STAGES[st.run.stage];
       upRow(p, {
-        title: N.name, lvl: () => `этап ${st.run.stage + 2} из ${L.STAGES.length}`,
+        title: N.name, icon: 'stage', rid: 'stage', lvl: () => `этап ${st.run.stage + 2} из ${L.STAGES.length}`,
+        lvInfo: () => ({ lv: st.run.stage, max: L.STAGES.length - 1, cap: L.STAGES.length - 1 }),
         eff: () => `Пешеходов ×${(N.loc / S.loc).toFixed(1).replace('.', ',')}, базовая плата ×${(N.fee / S.fee).toFixed(1).replace('.', ',')}, предел улучшений выше. Аренда станет <b>${fmtMoney(N.rent * (L.hasC(st, 'rent') ? 0.5 : 1))}/с</b>. Дверь и улучшения переезжают с вами.`,
-        cost: () => fmtMoney(L.stageCost(st)), n: () => 'переехать', can: () => L.afford(st, L.stageCost(st)),
+        big: () => [fmt(S.loc) + '/с', fmt(N.loc) + '/с', 'пешеходов у входа'],
+        desc: () => `Плата за вход ×${(N.fee / S.fee).toFixed(1).replace('.', ',')}, выше предел улучшений. Аренда станет <b>${fmtMoney(N.rent * (L.hasC(st, 'rent') ? 0.5 : 1))}/с</b>. Дверь переезжает с вами.`,
+        price: () => L.stageCost(st),
+        cost: () => fmtMoney(L.stageCost(st)), n: () => (isMobile() ? 'Переехать' : 'переехать'), can: () => L.afford(st, L.stageCost(st)),
         buy: evs => L.buyStage(st, evs),
       });
     }
@@ -2514,8 +2798,12 @@ if (typeof module !== 'undefined') module.exports = Logic;
     p.appendChild(ol);
   }
   function buildFran(p) {
-    note(p, 'Франшиза — это <b>перезапуск</b>. Вы продаёте текущую точку и открываете новую: снова ларёк, ноль денег, дверь без улучшений. Взамен — <b>энергия вращения (ЭВ)</b>.');
-    note(p, 'ЭВ тратится на <b>перки</b> — они действуют всегда. А перед каждой франшизой выбираются <b>контракты</b> на новый забег. Счётчик человечества не сбрасывается.');
+    const M = isMobile();
+    const intro = b => {
+      note(b, 'Франшиза — это <b>перезапуск</b>. Вы продаёте текущую точку и открываете новую: снова ларёк, ноль денег, дверь без улучшений. Взамен — <b>энергия вращения (ЭВ)</b>.');
+      note(b, 'ЭВ тратится на <b>перки</b> — они действуют всегда. А перед каждой франшизой выбираются <b>контракты</b> на новый забег. Счётчик человечества не сбрасывается.');
+    };
+    if (M) details(p, 'Что такое франшиза', intro); else intro(p);
     readout(p, [
       ['Получите сейчас', () => `${L.seGain(st)} ЭВ`],
       ['На счету', () => `${st.meta.se} ЭВ`],
@@ -2532,6 +2820,20 @@ if (typeof module !== 'undefined') module.exports = Logic;
     p.appendChild(btn);
     rows.push(() => { const g = L.seGain(st); btn.disabled = g < 1; setText(btn, g < 1 ? 'Пока нечего получать — впустите больше людей' : `Открыть франшизу… (+${g} ЭВ)`); });
 
+    sect(p, 'Перки — навсегда');
+    for (const pk of L.PERKS) {
+      upRow(p, {
+        title: pk.name, icon: 'star', lvl: () => `ур. ${L.perk(st, pk.id)} из ${pk.max}`, free: false,
+        lvInfo: () => ({ lv: L.perk(st, pk.id), max: pk.max, cap: pk.max }),
+        eff: () => { const l = L.perk(st, pk.id); return `${pk.what}<br>${l >= pk.max ? 'Взят полностью.' : pk.d(l)}`; },
+        desc: M ? () => { const l = L.perk(st, pk.id); return `${pk.what}<br>${l >= pk.max ? 'Взят полностью.' : pk.d(l)}`; } : null,
+        cost: () => `${pk.cost(L.perk(st, pk.id))} ЭВ`, n: () => (M ? 'Взять перк' : 'взять'),
+        can: () => st.meta.se >= pk.cost(L.perk(st, pk.id)),
+        short: () => `Нужно ещё ${pk.cost(L.perk(st, pk.id)) - st.meta.se} ЭВ`,
+        locked: () => (L.perk(st, pk.id) >= pk.max ? 'взят' : null),
+        buy: () => { const ok = L.buyPerk(st, pk.id); if (ok) logEvent(`Перк «${pk.name}», ур. ${L.perk(st, pk.id)}`); return ok; },
+      });
+    }
     sect(p, 'Контракты на следующий забег');
     const cs = el('div', 'note'); p.appendChild(cs);
     rows.push(() => {
@@ -2543,20 +2845,9 @@ if (typeof module !== 'undefined') module.exports = Logic;
     for (const c of L.CONTRACTS) {
       const lab = el('label', 'check slim'); const ck = el('input'); ck.type = 'checkbox'; ck.id = 'ct-' + c.id;
       lab.append(ck, el('span', null, `<b>${c.name}.</b> ${c.d}`));
-      ck.addEventListener('change', () => { if (!L.toggleNextContract(st, c.id)) { ck.checked = false; toast(`Свободных мест для контрактов нет: снимите другой или возьмите перк «Отдел контрактов»`); } refreshPanel(); });
+      ck.addEventListener('change', () => { if (!L.toggleNextContract(st, c.id)) { ck.checked = false; toast('Свободных мест для контрактов нет: снимите другой или возьмите перк «Отдел контрактов»'); } refreshPanel(); });
       cl.appendChild(lab);
       rows.push(() => { ck.checked = st.meta.nextContracts.indexOf(c.id) >= 0; });
-    }
-    sect(p, 'Перки — навсегда');
-    for (const pk of L.PERKS) {
-      upRow(p, {
-        title: pk.name, lvl: () => `${L.perk(st, pk.id)}/${pk.max}`, free: false,
-        eff: () => { const l = L.perk(st, pk.id); return `${pk.what}<br>${l >= pk.max ? 'Взят полностью.' : pk.d(l)}`; },
-        cost: () => `${pk.cost(L.perk(st, pk.id))} ЭВ`, n: () => 'взять',
-        can: () => st.meta.se >= pk.cost(L.perk(st, pk.id)),
-        locked: () => (L.perk(st, pk.id) >= pk.max ? 'взят' : null),
-        buy: () => { const ok = L.buyPerk(st, pk.id); if (ok) logEvent(`Перк «${pk.name}», ур. ${L.perk(st, pk.id)}`); return ok; },
-      });
     }
   }
   function fmtTime(sec) {
@@ -2609,7 +2900,9 @@ if (typeof module !== 'undefined') module.exports = Logic;
     mk('Выключить режим', () => setAuthor(false));
     b.appendChild(g2); p.appendChild(b);
   }
+  const NO_AUTHOR = !!window.KRUG_PUBLIC;
   function setAuthor(on) {
+    if (NO_AUTHOR && on) return;
     if (!!st.settings.author === on) return;
     st.settings.author = on; if (!on) st.settings.speed = 1;
     toast(on ? 'Режим автора: деньги бесконечны, покупки бесплатны' : 'Режим автора выключен');
@@ -2703,6 +2996,7 @@ if (typeof module !== 'undefined') module.exports = Logic;
     refreshPanel(); pbody.scrollTop = 0;
   }
   function refreshPanel() {
+    recId = recommendId();
     for (const r of rows) r();
     for (const b of document.querySelectorAll('#buyseg button')) b.setAttribute('aria-pressed', String(b.dataset.n === String(st.settings.buy)));
     if (curTab === 'fran') setText($('#sub-l'), `Энергия вращения: ${st.meta.se} ЭВ`);
@@ -2979,7 +3273,8 @@ if (typeof module !== 'undefined') module.exports = Logic;
     else if (hiddenAt) { const gap = (Date.now() - hiddenAt) / 1000; hiddenAt = 0; last = performance.now(); if (gap > 2) catchUp(gap); }
   });
   window.addEventListener('pagehide', save);
-  window.addEventListener('resize', () => { resize(); if (st) fitCamera(dims(), true); });
+  let lastM = null;
+  window.addEventListener('resize', () => { resize(); if (!st) return; fitCamera(dims(), true); const m = isMobile(); if (lastM !== null && m !== lastM) showTab(curTab); lastM = m; });
 
   function start(data) {
     let fresh = false;
@@ -2996,6 +3291,7 @@ if (typeof module !== 'undefined') module.exports = Logic;
       }
     }
     if (!st) { st = L.newState(); fresh = true; }
+    if (window.KRUG_PUBLIC) { st.settings.author = false; st.settings.speed = 1; }
     applyTheme(); applyCrowd();
     resetRiders();
     resize();
